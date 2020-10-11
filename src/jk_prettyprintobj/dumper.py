@@ -24,7 +24,7 @@ DEFAULT_DUMPER_SETTINGS = DumperSettings()
 
 
 
-class _DumperCtx(object):
+class DumpCtx(object):
 
 	_TYPE_MAP = {}
 
@@ -56,6 +56,8 @@ class _DumperCtx(object):
 				varNames = args
 			elif isinstance(args[0], (tuple, list)):
 				varNames = args[0]
+			else:
+				raise Exception("Unexpected data in args: " + repr(args))
 
 		else:
 			varNames = args
@@ -80,7 +82,7 @@ class _DumperCtx(object):
 			return
 
 		t = type(value)
-		m = _DumperCtx._TYPE_MAP.get(t)
+		m = DumpCtx._TYPE_MAP.get(t)
 		if m:
 			m(self, extraPrefix, value)
 			return
@@ -110,7 +112,7 @@ class _DumperCtx(object):
 	def _dumpObj(self, extraPrefix:str, value:object):
 		self.outputLines.append(self.prefix + extraPrefix + "<" + value.__class__.__name__ + "(")
 
-		ctx = _DumperCtx(self.__s, self.outputLines, None, self.prefix + "\t")
+		ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 		with ctx as ctx2:
 			if hasattr(value, "_dump"):
 				value._dump(ctx2)
@@ -130,7 +132,7 @@ class _DumperCtx(object):
 
 		self.outputLines.append(self.prefix + extraPrefix + e + "{")
 
-		ctx = _DumperCtx(self.__s, self.outputLines, None, self.prefix + "\t")
+		ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 		with ctx as ctx2:
 			for k, v in value.items():
 				ctx2._dumpX(self._dictKeyToStr(k) + " : ", v)
@@ -151,7 +153,7 @@ class _DumperCtx(object):
 		else:
 			self.outputLines.append(self.prefix + extraPrefix + e + "[")
 
-			ctx = _DumperCtx(self.__s, self.outputLines, None, self.prefix + "\t")
+			ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 			with ctx as ctx2:
 				for vItem in value:
 					ctx2._dumpX("", vItem)
@@ -172,7 +174,7 @@ class _DumperCtx(object):
 		else:
 			self.outputLines.append(self.prefix + extraPrefix + e + "(")
 
-			ctx = _DumperCtx(self.__s, self.outputLines, None, self.prefix + "\t")
+			ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 			with ctx as ctx2:
 				for vItem in value:
 					ctx2._dumpX("", vItem)
@@ -195,7 +197,7 @@ class _DumperCtx(object):
 		else:
 			self.outputLines.append(self.prefix + extraPrefix + e + "{")
 
-			ctx = _DumperCtx(self.__s, self.outputLines, None, self.prefix + "\t")
+			ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 			with ctx as ctx2:
 				for vItem in sequence:
 					ctx2._dumpX("", vItem)
@@ -218,7 +220,7 @@ class _DumperCtx(object):
 		else:
 			self.outputLines.append(self.prefix + extraPrefix + e + "{")
 
-			ctx = _DumperCtx(self.__s, self.outputLines, None, self.prefix + "\t")
+			ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 			with ctx as ctx2:
 				for vItem in sequence:
 					ctx2._dumpX("", vItem)
@@ -313,16 +315,16 @@ class _DumperCtx(object):
 #
 # Now let's register the types
 #
-if not _DumperCtx._TYPE_MAP:
-	_DumperCtx._TYPE_MAP[set] = _DumperCtx._dumpSet
-	_DumperCtx._TYPE_MAP[frozenset] = _DumperCtx._dumpFrozenSet
-	_DumperCtx._TYPE_MAP[tuple] = _DumperCtx._dumpTuple
-	_DumperCtx._TYPE_MAP[list] = _DumperCtx._dumpList
-	_DumperCtx._TYPE_MAP[dict] = _DumperCtx._dumpDict
-	_DumperCtx._TYPE_MAP[int] = _DumperCtx._dumpPrimitive
-	_DumperCtx._TYPE_MAP[float] = _DumperCtx._dumpPrimitive
-	_DumperCtx._TYPE_MAP[bool] = _DumperCtx._dumpPrimitive
-	_DumperCtx._TYPE_MAP[str] = _DumperCtx._dumpPrimitive
+if not DumpCtx._TYPE_MAP:
+	DumpCtx._TYPE_MAP[set] = DumpCtx._dumpSet
+	DumpCtx._TYPE_MAP[frozenset] = DumpCtx._dumpFrozenSet
+	DumpCtx._TYPE_MAP[tuple] = DumpCtx._dumpTuple
+	DumpCtx._TYPE_MAP[list] = DumpCtx._dumpList
+	DumpCtx._TYPE_MAP[dict] = DumpCtx._dumpDict
+	DumpCtx._TYPE_MAP[int] = DumpCtx._dumpPrimitive
+	DumpCtx._TYPE_MAP[float] = DumpCtx._dumpPrimitive
+	DumpCtx._TYPE_MAP[bool] = DumpCtx._dumpPrimitive
+	DumpCtx._TYPE_MAP[str] = DumpCtx._dumpPrimitive
 
 
 
@@ -343,7 +345,7 @@ class Dumper(object):
 		else:
 			prefix = ""
 
-		return _DumperCtx(DEFAULT_DUMPER_SETTINGS, self.__outputLines, None, prefix)
+		return DumpCtx(DEFAULT_DUMPER_SETTINGS, self.__outputLines, None, prefix)
 	#
 
 	def print(self, printFunc = None):
