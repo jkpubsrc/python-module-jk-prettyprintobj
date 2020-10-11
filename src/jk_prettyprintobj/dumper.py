@@ -43,6 +43,29 @@ class _DumperCtx(object):
 		self._dumpX(varName + " = ", value)
 	#
 
+	def dumpVars(self, caller, *args):
+		if len(args) == 0:
+			if hasattr(caller, "_dumpVarNames"):
+				varNames = caller._dumpVarNames()
+				assert isinstance(varNames, (list, tuple))
+			else:
+				raise Exception("Specify either variable names or a list of variables to dump!")
+
+		elif len(args) == 1:
+			if isinstance(args[0], str):
+				varNames = args
+			elif isinstance(args[0], (tuple, list)):
+				varNames = args[0]
+
+		else:
+			varNames = args
+
+		for varName in varNames:
+			assert isinstance(varName, str)
+			value = getattr(caller, varName)
+			self._dumpX(varName + " = ", value)
+	#
+
 	################################################################################################################################
 	#### Dispatcher method
 	################################################################################################################################
@@ -73,6 +96,14 @@ class _DumperCtx(object):
 	#### Type specific dump methods
 	################################################################################################################################
 
+	def _isDumpableObj(self, obj):
+		if hasattr(obj, "_dump"):
+			return True
+		if hasattr(obj, "_dumpVarNames"):
+			return True
+		return False
+	#
+
 	#
 	# Dump the specified object.
 	#
@@ -81,7 +112,12 @@ class _DumperCtx(object):
 
 		ctx = _DumperCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 		with ctx as ctx2:
-			value._dump(ctx2)
+			if hasattr(value, "_dump"):
+				value._dump(ctx2)
+			elif hasattr(value, "_dumpVarNames"):
+				ctx2.dumpVars(value)
+			else:
+				raise Exception("Improper object encountered for prettyprinting!")
 
 		self.outputLines.append(self.prefix + ")>")
 	#
@@ -307,8 +343,7 @@ class Dumper(object):
 		else:
 			prefix = ""
 
-		self.__outputLines.append(prefix + "<" + obj.__class__.__name__ + "(")
-		return _DumperCtx(DEFAULT_DUMPER_SETTINGS, self.__outputLines, prefix + ")>", prefix + "\t")
+		return _DumperCtx(DEFAULT_DUMPER_SETTINGS, self.__outputLines, None, prefix)
 	#
 
 	def print(self, printFunc = None):
@@ -332,7 +367,9 @@ class DumpMixin:
 	def dump(self, prefix:str = None, printFunc = None):
 		dumper = Dumper()
 		with dumper.createContext(self, prefix) as dumper2:
-			self._dump(dumper2)
+			if not dumper2._isDumpableObj(self):
+				raise Exception("Improper object encountered for prettyprinting!")
+			dumper2._dumpObj("", self)
 		dumper.print(printFunc)
 	#
 

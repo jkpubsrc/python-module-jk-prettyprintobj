@@ -73,6 +73,51 @@ class Test(DumpMixin):
 		self.someDequeue = collections.deque()
 	#
 
+	def _dumpVarNames(self) -> list:
+		return [
+			"someStr",
+			"someInt",
+			"someBool",
+			"someNone",
+			"someFloat",
+			"someDate",
+			"someObj",
+			"someTuple",
+			"someList",
+			"someDict",
+			"someSet",
+			"someFrozenSet",
+			"someNamedTuple",
+			"someOrderedDict",
+			"someDefaultDict",
+			"someDequeue",
+		]
+	#
+
+	"""
+	def _dumpVars(self, dumper:Dumper):
+		dumper.dumpVars("someStr", [
+			"someStr",
+			"someInt",
+			"someBool",
+			"someNone",
+			"someFloat",
+			"someDate",
+			"someObj",
+			"someTuple",
+			"someList",
+			"someDict",
+			"someSet",
+			"someFrozenSet",
+			"someNamedTuple",
+			"someOrderedDict",
+			"someDefaultDict",
+			"someDequeue",
+		])
+	#
+	"""
+
+	"""
 	def _dump(self, dumper:Dumper):
 		dumper.dumpVar("someStr", self.someStr)
 		dumper.dumpVar("someInt", self.someInt)
@@ -91,6 +136,7 @@ class Test(DumpMixin):
 		dumper.dumpVar("someDefaultDict", self.someDefaultDict)
 		dumper.dumpVar("someDequeue", self.someDequeue)
 	#
+	"""
 
 #
 
@@ -99,28 +145,6 @@ class Test(DumpMixin):
 
 t = Test()
 t.dump()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
