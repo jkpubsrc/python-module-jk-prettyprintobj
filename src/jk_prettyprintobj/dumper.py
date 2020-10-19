@@ -1,6 +1,6 @@
 
 
-#import collections
+import collections
 #import datetime
 
 
@@ -129,6 +129,20 @@ class DumpCtx(object):
 	#
 	def _dumpDict(self, extraPrefix:str, value:dict):
 		e = "dict:" if self.__s.showComplexStructsWithType else ""
+
+		self.outputLines.append(self.prefix + extraPrefix + e + "{")
+
+		ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
+		with ctx as ctx2:
+			for k, v in value.items():
+				ctx2._dumpX(self._dictKeyToStr(k) + " : ", v)
+				self.outputLines[-1] += ","
+
+		self.outputLines.append(self.prefix + "}")
+	#
+
+	def _dumpOrderedDict(self, extraPrefix:str, value:dict):
+		e = "OrderedDict:" if self.__s.showComplexStructsWithType else ""
 
 		self.outputLines.append(self.prefix + extraPrefix + e + "{")
 
@@ -320,6 +334,7 @@ if not DumpCtx._TYPE_MAP:
 	DumpCtx._TYPE_MAP[frozenset] = DumpCtx._dumpFrozenSet
 	DumpCtx._TYPE_MAP[tuple] = DumpCtx._dumpTuple
 	DumpCtx._TYPE_MAP[list] = DumpCtx._dumpList
+	DumpCtx._TYPE_MAP[collections.OrderedDict] = DumpCtx._dumpOrderedDict
 	DumpCtx._TYPE_MAP[dict] = DumpCtx._dumpDict
 	DumpCtx._TYPE_MAP[int] = DumpCtx._dumpPrimitive
 	DumpCtx._TYPE_MAP[float] = DumpCtx._dumpPrimitive

@@ -1,4 +1,4 @@
-﻿jk_prettyprintobj
+jk_prettyprintobj
 ========
 
 Introduction

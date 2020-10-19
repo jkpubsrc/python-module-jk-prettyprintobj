@@ -21,24 +21,24 @@ setup(
 	classifiers = [
 		"Development Status :: 5 - Production/Stable",
 		"License :: OSI Approved :: Apache Software License",
+		"Programming Language :: Python :: 3",
+		"Topic :: Software Development :: Testing",
 	],
 	description = "This python module provides a mixin for dumping objects.",
-	download_url = "https://github.com/jkpubsrc/python-module-jk-prettyprintobj/tarball/0.2020.10.11",
 	include_package_data = False,
 	install_requires = [
 	],
 	keywords = [
 		"pretty-print",
 		"debugging",
-		"debug"
+		"debug",
 	],
-	license = "Apache 2.0",
+	license = "Apache2",
 	name = "jk_prettyprintobj",
 	packages = [
 		"jk_prettyprintobj",
 	],
-	url = "https://github.com/jkpubsrc/python-module-jk-prettyprintobj",
-	version = "0.2020.10.11",
+	version = "0.2020.10.19",
 	zip_safe = False,
 	long_description = readme(),
 	long_description_content_type="text/markdown",

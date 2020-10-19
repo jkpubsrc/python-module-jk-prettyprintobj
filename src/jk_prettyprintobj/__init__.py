@@ -1,11 +1,10 @@
 ﻿
 
-__version__ = "0.2020.10.11"
+__version__ = "0.2020.10.19"
 
 
 
 from .dumper import DumpMixin, Dumper, DumpCtx
-
 
 
 
