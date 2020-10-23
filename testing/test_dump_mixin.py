@@ -71,6 +71,7 @@ class Test(DumpMixin):
 		self.someOrderedDict = collections.OrderedDict()
 		self.someDefaultDict = collections.defaultdict()
 		self.someDequeue = collections.deque()
+		self.someLoremIpsum = "In amet at dapibus gravida, phasellus massa cursus lacus ridiculus elementum, nulla dictum non sociis montes, pulvinar integer maecenas id ultrices,. Arcu pellentesque sagittis condimentum fermentum justo, arcu a vel mi adipiscing primis, tristique eleifend et non, netus vitae. Lacus neque ornare gravida, tellus iaculis nam et interdum hac sollicitudin pharetra, non curabitur fames aliquam magna. Ullamcorper fusce aptent etiam lacus nam, praesent turpis ut aliquet purus, parturient pulvinar lectus fringilla, mauris nam tortor. Sed ac mus fermentum nisi."
 	#
 
 	def _dumpVarNames(self) -> list:
@@ -91,6 +92,7 @@ class Test(DumpMixin):
 			"someOrderedDict",
 			"someDefaultDict",
 			"someDequeue",
+			"someLoremIpsum:shorten",
 		]
 	#
 
