@@ -318,12 +318,6 @@ class DumpCtx(object):
 	# Converts a single primitive value to str
 	#
 	def _primitiveValueToStr(self, value, postProcessorName:str = None):
-		if postProcessorName:
-			print()
-			print("----")
-			print(postProcessorName)
-			print("----")
-			print()
 		if value is None:
 			return "(null)"
 		else:
