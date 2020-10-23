@@ -35,9 +35,21 @@ def _shortenText(text:str) -> str:
 #
 
 
+
+
 POST_PROCESSORS = {
 	"shorten": _shortenText
 }
+
+
+
+
+class _Omitted:
+	pass
+#
+
+_OMITTED = _Omitted()
+
 
 
 
@@ -57,8 +69,8 @@ class DumpCtx(object):
 	#### Methods that should be called by implementors
 	################################################################################################################################
 
-	def dumpVar(self, varName:str, value):
-		self._dumpX(varName + " = ", value)
+	def dumpVar(self, varName:str, value, postProcessorName:str = None):
+		self._dumpX(varName + " = ", value, postProcessorName)
 	#
 
 	def dumpVars(self, caller, *args):
@@ -162,6 +174,8 @@ class DumpCtx(object):
 		ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 		with ctx as ctx2:
 			for k, v in value.items():
+				if postProcessorName == "omitValues":
+					v = _OMITTED
 				ctx2._dumpX(self._dictKeyToStr(k) + " : ", v)
 				self.outputLines[-1] += ","
 
@@ -274,6 +288,10 @@ class DumpCtx(object):
 		self.outputLines.append(self.prefix + extraPrefix + self._primitiveValueToStr(value, postProcessorName))
 	#
 
+	def _dumpOmitted(self, extraPrefix:str, value, postProcessorName:str = None):
+		self.outputLines.append(self.prefix + extraPrefix + "...")
+	#
+
 	################################################################################################################################
 	#### Helper methods
 	################################################################################################################################
@@ -384,6 +402,7 @@ if not DumpCtx._TYPE_MAP:
 	DumpCtx._TYPE_MAP[float] = DumpCtx._dumpPrimitive
 	DumpCtx._TYPE_MAP[bool] = DumpCtx._dumpPrimitive
 	DumpCtx._TYPE_MAP[str] = DumpCtx._dumpPrimitive
+	DumpCtx._TYPE_MAP[_Omitted] = DumpCtx._dumpOmitted
 
 
 
