@@ -158,7 +158,7 @@ class DumpCtx(object):
 			elif hasattr(value, "_dumpVarNames"):
 				ctx2.dumpVars(value)
 			else:
-				raise Exception("Improper object encountered for prettyprinting!")
+				raise Exception("Improper object encountered for prettyprinting: " + type(value).__name__)
 
 		self.outputLines.append(self.prefix + ")>")
 	#
@@ -448,7 +448,7 @@ class DumpMixin:
 		dumper = Dumper()
 		with dumper.createContext(self, prefix) as dumper2:
 			if not dumper2._isDumpableObj(self):
-				raise Exception("Improper object encountered for prettyprinting!")
+				raise Exception("Improper object encountered for prettyprinting: " + self.__class__.__name__)
 			dumper2._dumpObj("", self)
 		dumper.print(printFunc)
 	#
