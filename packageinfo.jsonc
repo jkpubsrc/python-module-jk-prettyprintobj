@@ -11,7 +11,7 @@
 				"name": "J\u00fcrgen Knauth"
 			}
 		],
-		"description": "This python module provides a mixin for dumping objects.",
+		"description": "This python module provides a mixin for creating pretty debugging output for objects. This is especially useful for semi-complex data structures.",
 		"development_status": "stable",
 		"keywords": [
 			"pretty-print",

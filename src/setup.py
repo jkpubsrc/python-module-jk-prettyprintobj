@@ -24,7 +24,7 @@ setup(
 		"Programming Language :: Python :: 3",
 		"Topic :: Software Development :: Testing",
 	],
-	description = "This python module provides a mixin for dumping objects.",
+	description = "This python module provides a mixin for creating pretty debugging output for objects. This is especially useful for semi-complex data structures.",
 	include_package_data = False,
 	install_requires = [
 	],
