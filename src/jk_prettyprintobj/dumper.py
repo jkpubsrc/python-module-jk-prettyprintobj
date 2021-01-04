@@ -1,7 +1,11 @@
 
 
+import typing
 import collections
 #import datetime
+
+from ._Hex import _Hex
+from ._Bits import _Bits
 
 
 
@@ -24,21 +28,78 @@ DEFAULT_DUMPER_SETTINGS = DumperSettings()
 
 
 
-def _shortenText(text:str) -> str:
-	if text is None:
-		return None
+def _str_shortenText(text:str) -> str:
 	if len(text) > 40:
 		return text[:40] + "..."
 	else:
 		return text
+#
 
+def _float_roundTo7FractionDigits(data:typing.Union[int,float]) -> float:
+	return round(data, 7)
+#
+
+def _float_roundTo6FractionDigits(data:typing.Union[int,float]) -> float:
+	return round(data, 6)
+#
+
+def _float_roundTo5FractionDigits(data:typing.Union[int,float]) -> float:
+	return round(data, 5)
+#
+
+def _float_roundTo4FractionDigits(data:typing.Union[int,float]) -> float:
+	return round(data, 4)
+#
+
+def _float_roundTo3FractionDigits(data:typing.Union[int,float]) -> float:
+	return round(data, 3)
+#
+
+def _float_roundTo2FractionDigits(data:typing.Union[int,float]) -> float:
+	return round(data, 2)
+#
+
+def _float_roundTo1FractionDigits(data:typing.Union[int,float]) -> float:
+	return round(data, 1)
+#
+
+def _int_toHex(data:int) -> typing.Union[int,str]:
+	if data < 0:
+		return data
+	return _Hex(data)
+#
+
+def _int_toBits(data:int) -> typing.Union[int,str]:
+	if data < 0:
+		return data
+	return _Bits(data)
 #
 
 
 
 
 POST_PROCESSORS = {
-	"shorten": _shortenText
+	"shorten": (str, _str_shortenText),
+	"hex": (int, _int_toHex),
+	"bit": (int, _int_toBits),
+	"round1": ((float, int), _float_roundTo1FractionDigits),
+	"round2": ((float, int), _float_roundTo2FractionDigits),
+	"round3": ((float, int), _float_roundTo3FractionDigits),
+	"round4": ((float, int), _float_roundTo4FractionDigits),
+	"round5": ((float, int), _float_roundTo5FractionDigits),
+	"round6": ((float, int), _float_roundTo6FractionDigits),
+	"round7": ((float, int), _float_roundTo7FractionDigits),
+
+	"str_shorten": (str, _str_shortenText),
+	"float_round7": ((float, int), _float_roundTo7FractionDigits),
+	"float_round6": ((float, int), _float_roundTo6FractionDigits),
+	"float_round5": ((float, int), _float_roundTo5FractionDigits),
+	"float_round4": ((float, int), _float_roundTo4FractionDigits),
+	"float_round3": ((float, int), _float_roundTo3FractionDigits),
+	"float_round2": ((float, int), _float_roundTo2FractionDigits),
+	"float_round1": ((float, int), _float_roundTo1FractionDigits),
+	"int_hex": (int, _int_toHex),
+	"int_bit": (int, _int_toBits),
 }
 
 
@@ -69,10 +130,16 @@ class DumpCtx(object):
 	#### Methods that should be called by implementors
 	################################################################################################################################
 
-	def dumpVar(self, varName:str, value, postProcessorName:str = None):
-		self._dumpX(varName + " = ", value, postProcessorName)
+	#
+	# if you implement `void _dump(DumpCtx ctx)` invoke this method to dump a specific variable explicitely.
+	#
+	def dumpVar(self, varName:str, value, processorName:str = None) -> None:
+		self._dumpX(varName + " = ", value, processorName)
 	#
 
+	#
+	# ????
+	#
 	def dumpVars(self, caller, *args):
 		if len(args) == 0:
 			if hasattr(caller, "_dumpVarNames"):
@@ -95,16 +162,16 @@ class DumpCtx(object):
 		for varName in varNames:
 			assert isinstance(varName, str)
 
-			postProcessorName = None
+			processorName = None
 			pos = varName.find(":")
 			if pos == 0:
 				raise Exception()
 			elif pos > 0:
-				postProcessorName = varName[pos+1:]
+				processorName = varName[pos+1:]
 				varName = varName[:pos]
 
 			value = getattr(caller, varName)
-			self._dumpX(varName + " = ", value, postProcessorName)
+			self._dumpX(varName + " = ", value, processorName)
 	#
 
 	################################################################################################################################
@@ -115,15 +182,15 @@ class DumpCtx(object):
 	# This method outputs a value (recursively).
 	# To achieve this this method analyses the data type of the specified value and invokes individual type processing methods if available.
 	#
-	def _dumpX(self, extraPrefix:str, value, postProcessorName:str = None):
+	def _dumpX(self, extraPrefix:str, value, processorName:str = None):
 		if value is None:
-			self._dumpPrimitive(extraPrefix, value, postProcessorName)
+			self._dumpPrimitive(extraPrefix, value, processorName)
 			return
 
 		t = type(value)
 		m = DumpCtx._TYPE_MAP.get(t)
 		if m:
-			m(self, extraPrefix, value, postProcessorName)
+			m(self, extraPrefix, value, processorName)
 			return
 
 		if isinstance(value, DumpMixin):
@@ -148,7 +215,7 @@ class DumpCtx(object):
 	#
 	# Dump the specified object.
 	#
-	def _dumpObj(self, extraPrefix:str, value:object, postProcessorName:str = None):
+	def _dumpObj(self, extraPrefix:str, value:object, processorName:str = None):
 		self.outputLines.append(self.prefix + extraPrefix + "<" + value.__class__.__name__ + "(")
 
 		ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
@@ -166,7 +233,7 @@ class DumpCtx(object):
 	#
 	# Dump the specified dictionary.
 	#
-	def _dumpDict(self, extraPrefix:str, value:dict, postProcessorName:str = None):
+	def _dumpDict(self, extraPrefix:str, value:dict, processorName:str = None):
 		e = "dict:" if self.__s.showComplexStructsWithType else ""
 
 		self.outputLines.append(self.prefix + extraPrefix + e + "{")
@@ -174,7 +241,7 @@ class DumpCtx(object):
 		ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 		with ctx as ctx2:
 			for k, v in value.items():
-				if postProcessorName == "omitValues":
+				if processorName == "omitValues":
 					v = _OMITTED
 				ctx2._dumpX(self._dictKeyToStr(k) + " : ", v)
 				self.outputLines[-1] += ","
@@ -182,7 +249,7 @@ class DumpCtx(object):
 		self.outputLines.append(self.prefix + "}")
 	#
 
-	def _dumpOrderedDict(self, extraPrefix:str, value:dict, postProcessorName:str = None):
+	def _dumpOrderedDict(self, extraPrefix:str, value:dict, processorName:str = None):
 		e = "OrderedDict:" if self.__s.showComplexStructsWithType else ""
 
 		self.outputLines.append(self.prefix + extraPrefix + e + "{")
@@ -199,11 +266,11 @@ class DumpCtx(object):
 	#
 	# Dump the specified list.
 	#
-	def _dumpList(self, extraPrefix:str, value:list, postProcessorName:str = None):
+	def _dumpList(self, extraPrefix:str, value:list, processorName:str = None):
 		e = "list:" if self.__s.showComplexStructsWithType else ""
 
 		if self._canCompactSequence(value):
-			self.outputLines.append(self.prefix + extraPrefix + e + "[ " + self._compactSequence(value) + " ]")
+			self.outputLines.append(self.prefix + extraPrefix + e + "[ " + self._compactSequence(value, processorName) + " ]")
 
 		else:
 			self.outputLines.append(self.prefix + extraPrefix + e + "[")
@@ -211,7 +278,7 @@ class DumpCtx(object):
 			ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 			with ctx as ctx2:
 				for vItem in value:
-					ctx2._dumpX("", vItem)
+					ctx2._dumpX("", vItem, processorName)
 					self.outputLines[-1] += ","
 
 			self.outputLines.append(self.prefix + "]")
@@ -220,11 +287,11 @@ class DumpCtx(object):
 	#
 	# Dump the specified tuple.
 	#
-	def _dumpTuple(self, extraPrefix:str, value:set, postProcessorName:str = None):
+	def _dumpTuple(self, extraPrefix:str, value:set, processorName:str = None):
 		e = "tuple:" if self.__s.showComplexStructsWithType else ""
 
 		if self._canCompactSequence(value):
-			self.outputLines.append(self.prefix + extraPrefix + e + "( " + self._compactSequence(value) + " )")
+			self.outputLines.append(self.prefix + extraPrefix + e + "( " + self._compactSequence(value, processorName) + " )")
 
 		else:
 			self.outputLines.append(self.prefix + extraPrefix + e + "(")
@@ -232,7 +299,7 @@ class DumpCtx(object):
 			ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 			with ctx as ctx2:
 				for vItem in value:
-					ctx2._dumpX("", vItem)
+					ctx2._dumpX("", vItem, processorName)
 					self.outputLines[-1] += ","
 
 			self.outputLines.append(self.prefix + ")")
@@ -241,13 +308,13 @@ class DumpCtx(object):
 	#
 	# Dump the specified set.
 	#
-	def _dumpSet(self, extraPrefix:str, value:set, postProcessorName:str = None):
+	def _dumpSet(self, extraPrefix:str, value:set, processorName:str = None):
 		e = "set:" if self.__s.showComplexStructsWithType else ""
 
 		sequence = sorted(value)
 
 		if self._canCompactSequence(sequence):
-			self.outputLines.append(self.prefix + extraPrefix + e + "{ " + self._compactSequence(sequence) + " }")
+			self.outputLines.append(self.prefix + extraPrefix + e + "{ " + self._compactSequence(sequence, processorName) + " }")
 
 		else:
 			self.outputLines.append(self.prefix + extraPrefix + e + "{")
@@ -255,7 +322,7 @@ class DumpCtx(object):
 			ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 			with ctx as ctx2:
 				for vItem in sequence:
-					ctx2._dumpX("", vItem)
+					ctx2._dumpX("", vItem, processorName)
 					self.outputLines[-1] += ","
 
 			self.outputLines.append(self.prefix + "}")
@@ -264,13 +331,13 @@ class DumpCtx(object):
 	#
 	# Dump the specified frozen set.
 	#
-	def _dumpFrozenSet(self, extraPrefix:str, value:frozenset, postProcessorName:str = None):
+	def _dumpFrozenSet(self, extraPrefix:str, value:frozenset, processorName:str = None):
 		e = "frozenset:" if self.__s.showComplexStructsWithType else "frozenset"
 
 		sequence = sorted(value)
 
 		if self._canCompactSequence(sequence):
-			self.outputLines.append(self.prefix + extraPrefix + e + "{ " + self._compactSequence(sequence) + " }")
+			self.outputLines.append(self.prefix + extraPrefix + e + "{ " + self._compactSequence(sequence, processorName) + " }")
 
 		else:
 			self.outputLines.append(self.prefix + extraPrefix + e + "{")
@@ -278,17 +345,17 @@ class DumpCtx(object):
 			ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 			with ctx as ctx2:
 				for vItem in sequence:
-					ctx2._dumpX("", vItem)
+					ctx2._dumpX("", vItem, processorName)
 					self.outputLines[-1] += ","
 
 			self.outputLines.append(self.prefix + "}")
 	#
 
-	def _dumpPrimitive(self, extraPrefix:str, value, postProcessorName:str = None):
-		self.outputLines.append(self.prefix + extraPrefix + self._primitiveValueToStr(value, postProcessorName))
+	def _dumpPrimitive(self, extraPrefix:str, value, processorName:str = None):
+		self.outputLines.append(self.prefix + extraPrefix + self._primitiveValueToStr(value, processorName))
 	#
 
-	def _dumpOmitted(self, extraPrefix:str, value, postProcessorName:str = None):
+	def _dumpOmitted(self, extraPrefix:str, value, processorName:str = None):
 		self.outputLines.append(self.prefix + extraPrefix + "...")
 	#
 
@@ -305,10 +372,10 @@ class DumpCtx(object):
 		return True
 	#
 
-	def _compactSequence(self, someSequence) -> str:
+	def _compactSequence(self, someSequence, processorName:str = None) -> str:
 		ret = []
 		for v in someSequence:
-			ret.append(self._primitiveValueToStr(v))
+			ret.append(self._primitiveValueToStr(v, processorName))
 		return ", ".join(ret)
 	#
 
@@ -335,10 +402,19 @@ class DumpCtx(object):
 	#
 	# Converts a single primitive value to str
 	#
-	def _primitiveValueToStr(self, value, postProcessorName:str = None):
+	def _primitiveValueToStr(self, value, processorName:str = None):
 		if value is None:
 			return "(null)"
 		else:
+			# process value before converting it to str
+			if processorName:
+				if processorName not in POST_PROCESSORS:
+					raise Exception("No such postprocessor: " + repr(processorName))
+				postProcessorTypeCompatibility, postProcessor = POST_PROCESSORS[processorName]
+				if isinstance(value, postProcessorTypeCompatibility):
+					value = postProcessor(value)
+
+			# return value as str
 			if self.__s.showPrimitivesWithType:
 				if isinstance(value, float):
 					return "float:" + repr(value)
@@ -347,24 +423,12 @@ class DumpCtx(object):
 				elif isinstance(value, int):
 					return "int:" + repr(value)
 				elif isinstance(value, str):
-					if postProcessorName:
-						if postProcessorName not in POST_PROCESSORS:
-							raise Exception("No such postprocessor: " + repr(postProcessorName))
-						postProcessor = POST_PROCESSORS[postProcessorName]
-						return "str:" + repr(postProcessor(value))
-					else:
-						return "str:" + repr(value)
+					return "str:" + repr(value)
 				else:
 					return type(value).__name__ + ":" + repr(value)
 			else:
 				if isinstance(value, str):
-					if postProcessorName:
-						if postProcessorName not in POST_PROCESSORS:
-							raise Exception("No such postprocessor: " + repr(postProcessorName))
-						postProcessor = POST_PROCESSORS[postProcessorName]
-						return repr(postProcessor(value))
-					else:
-						return repr(value)
+					return repr(value)
 				else:
 					return repr(value)
 	#
@@ -448,7 +512,7 @@ class DumpMixin:
 		dumper = Dumper()
 		with dumper.createContext(self, prefix) as dumper2:
 			if not dumper2._isDumpableObj(self):
-				raise Exception("Improper object encountered for prettyprinting: " + self.__class__.__name__)
+				raise Exception("Improper object encountered for prettyprinting: " + self.__class__.__name__ + " - Either implement _dump(ctx:DumpCtx) or _dumpVarNames()!")
 			dumper2._dumpObj("", self)
 		dumper.print(printFunc)
 	#
