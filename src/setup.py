@@ -38,7 +38,7 @@ setup(
 	packages = [
 		"jk_prettyprintobj",
 	],
-	version = "0.2021.1.4",
+	version = "0.2021.2.10",
 	zip_safe = False,
 	long_description = readme(),
 	long_description_content_type="text/markdown",
