@@ -508,6 +508,8 @@ class Dumper(object):
 
 class DumpMixin:
 
+	__slots__ = tuple()
+
 	def dump(self, prefix:str = None, printFunc = None):
 		dumper = Dumper()
 		with dumper.createContext(self, prefix) as dumper2:
