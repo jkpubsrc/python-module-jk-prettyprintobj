@@ -18,7 +18,8 @@ class DumperSettings(object):
 		self.showPrimitivesWithType = False
 		self.showDictKeysWithType = False
 		self.showComplexStructsWithType = False
-		self.compactSequencLimit = 8
+		self.compactSequenceLengthLimit = 8
+		self.compactSequenceItemLengthLimit = 50
 	#
 
 #
@@ -184,8 +185,10 @@ class DumpCtx(object):
 	#
 	def _dumpX(self, extraPrefix:str, value, processorName:str = None):
 		if value is None:
-			self._dumpPrimitive(extraPrefix, value, processorName)
+			self._dumpPrimitive(extraPrefix, None, processorName)
 			return
+
+		# is it one of our types?
 
 		t = type(value)
 		m = DumpCtx._TYPE_MAP.get(t)
@@ -193,9 +196,20 @@ class DumpCtx(object):
 			m(self, extraPrefix, value, processorName)
 			return
 
+		# is it an object with a DumpMixin?
+
 		if isinstance(value, DumpMixin):
 			self._dumpObj(extraPrefix, value)
 			return
+
+		# is it derived from on of our types?
+
+		for storedT, m in DumpCtx._TYPE_MAP.items():
+			if isinstance(value, storedT):
+				m(self, extraPrefix, value, processorName)
+				return
+
+		# fallback
 
 		self.outputLines.append(self.prefix + extraPrefix + repr(value))
 	#
@@ -234,7 +248,7 @@ class DumpCtx(object):
 	# Dump the specified dictionary.
 	#
 	def _dumpDict(self, extraPrefix:str, value:dict, processorName:str = None):
-		e = "dict:" if self.__s.showComplexStructsWithType else ""
+		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
 		self.outputLines.append(self.prefix + extraPrefix + e + "{")
 
@@ -250,7 +264,7 @@ class DumpCtx(object):
 	#
 
 	def _dumpOrderedDict(self, extraPrefix:str, value:dict, processorName:str = None):
-		e = "OrderedDict:" if self.__s.showComplexStructsWithType else ""
+		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
 		self.outputLines.append(self.prefix + extraPrefix + e + "{")
 
@@ -267,7 +281,7 @@ class DumpCtx(object):
 	# Dump the specified list.
 	#
 	def _dumpList(self, extraPrefix:str, value:list, processorName:str = None):
-		e = "list:" if self.__s.showComplexStructsWithType else ""
+		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
 		if self._canCompactSequence(value):
 			self.outputLines.append(self.prefix + extraPrefix + e + "[ " + self._compactSequence(value, processorName) + " ]")
@@ -288,7 +302,7 @@ class DumpCtx(object):
 	# Dump the specified tuple.
 	#
 	def _dumpTuple(self, extraPrefix:str, value:set, processorName:str = None):
-		e = "tuple:" if self.__s.showComplexStructsWithType else ""
+		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
 		if self._canCompactSequence(value):
 			self.outputLines.append(self.prefix + extraPrefix + e + "( " + self._compactSequence(value, processorName) + " )")
@@ -309,7 +323,7 @@ class DumpCtx(object):
 	# Dump the specified set.
 	#
 	def _dumpSet(self, extraPrefix:str, value:set, processorName:str = None):
-		e = "set:" if self.__s.showComplexStructsWithType else ""
+		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
 		sequence = sorted(value)
 
@@ -332,7 +346,7 @@ class DumpCtx(object):
 	# Dump the specified frozen set.
 	#
 	def _dumpFrozenSet(self, extraPrefix:str, value:frozenset, processorName:str = None):
-		e = "frozenset:" if self.__s.showComplexStructsWithType else "frozenset"
+		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
 		sequence = sorted(value)
 
@@ -364,11 +378,15 @@ class DumpCtx(object):
 	################################################################################################################################
 
 	def _canCompactSequence(self, someSequence):
-		if len(someSequence) > self.__s.compactSequencLimit:
+		if len(someSequence) > self.__s.compactSequenceLengthLimit:
 			return False
 		for v in someSequence:
-			if (v is not None) and (type(v) not in [ int, str, float, bool ]):
-				return False
+			if v is not None:
+				if type(v) not in [ int, str, float, bool ]:
+					return False
+				if isinstance(v, str):
+					if len(v) > self.__s.compactSequenceItemLengthLimit:
+						return False
 		return True
 	#
 

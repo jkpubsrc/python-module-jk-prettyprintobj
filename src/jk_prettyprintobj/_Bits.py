@@ -3,7 +3,7 @@
 
 #
 # This class wraps around an integer value and represents a value in binary representation.
-# This is purely used to simlify output.
+# This is used to simlify output.
 #
 class _Bits(object):
 

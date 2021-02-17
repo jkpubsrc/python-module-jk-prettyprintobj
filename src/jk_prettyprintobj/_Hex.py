@@ -3,7 +3,7 @@
 
 #
 # This class wraps around an integer value and represents a hex value.
-# This is purely used to simlify output.
+# This is used to simlify output.
 #
 class _Hex(object):
 
