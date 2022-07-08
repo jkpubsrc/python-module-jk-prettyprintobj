@@ -10,3 +10,6 @@
 	* Corrected type in dumper.py
 	* Improved value type detection
 
+* 2021-02-18
+	* Better formatting of byte sequences
+

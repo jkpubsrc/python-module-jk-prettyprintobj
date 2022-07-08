@@ -1,5 +1,6 @@
 
 
+import chunk
 import typing
 import collections
 #import datetime
@@ -20,6 +21,7 @@ class DumperSettings(object):
 		self.showComplexStructsWithType = False
 		self.compactSequenceLengthLimit = 8
 		self.compactSequenceItemLengthLimit = 50
+		self.bytesLineSize = 128
 	#
 
 #
@@ -76,6 +78,20 @@ def _int_toBits(data:int) -> typing.Union[int,str]:
 	return _Bits(data)
 #
 
+def _byteChunker(data:bytes, chunkSize:int) -> typing.Sequence[bytes]:
+	assert isinstance(data, bytes)
+	assert isinstance(chunkSize, int)
+	assert chunkSize > 0
+
+	iFrom = 0
+	iTo = chunkSize
+	while iFrom < len(data):
+		yield data[iFrom:iTo]
+		iFrom = iTo
+		iTo += chunkSize
+#
+
+
 
 
 
@@ -118,7 +134,7 @@ _OMITTED = _Omitted()
 
 class DumpCtx(object):
 
-	_TYPE_MAP = {}
+	_TYPE_MAP = {}				# type -> function
 
 	def __init__(self, s:DumperSettings, outputLines:list, exitAppend:str, prefix:str):
 		self.__s = s
@@ -139,7 +155,7 @@ class DumpCtx(object):
 	#
 
 	#
-	# ????
+	# This method is invoked if an object implements _dumpVarNames()
 	#
 	def dumpVars(self, caller, *args):
 		if len(args) == 0:
@@ -294,6 +310,34 @@ class DumpCtx(object):
 				for vItem in value:
 					ctx2._dumpX("", vItem, processorName)
 					self.outputLines[-1] += ","
+
+			self.outputLines.append(self.prefix + "]")
+	#
+
+	#
+	# Dump the specified byte array.
+	#
+	def _dumpBytes(self, extraPrefix:str, value:bytes, processorName:str = None):
+		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
+
+		if len(value) <= self.__s.bytesLineSize:
+			self.outputLines.append(self.prefix + extraPrefix + e + repr(value))
+
+		else:
+			self.outputLines.append(self.prefix + extraPrefix + e + "<")
+
+			formatStrFragment = None
+			if len(value) <= 256*256:
+				formatStrFragment = "\t{:04x} "
+			elif len(value) <= 256*256*256:
+				formatStrFragment = "\t{:06x} "
+			else:
+				formatStrFragment = "\t{:08x} "
+
+			i = 0
+			for chunk in _byteChunker(value, self.__s.bytesLineSize):
+				self.outputLines.append(self.prefix + formatStrFragment.format(i) + repr(chunk))
+				i += self.__s.bytesLineSize
 
 			self.outputLines.append(self.prefix + "]")
 	#
@@ -474,6 +518,7 @@ class DumpCtx(object):
 # Now let's register the types
 #
 if not DumpCtx._TYPE_MAP:
+	DumpCtx._TYPE_MAP[bytes] = DumpCtx._dumpBytes
 	DumpCtx._TYPE_MAP[set] = DumpCtx._dumpSet
 	DumpCtx._TYPE_MAP[frozenset] = DumpCtx._dumpFrozenSet
 	DumpCtx._TYPE_MAP[tuple] = DumpCtx._dumpTuple

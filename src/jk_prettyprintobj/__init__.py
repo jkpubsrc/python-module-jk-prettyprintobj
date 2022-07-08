@@ -1,11 +1,10 @@
 ﻿
 
-__version__ = "0.2021.2.17"
+__version__ = "0.2022.1.18"
 
 
 
 from .dumper import DumpMixin, Dumper, DumpCtx, DEFAULT_DUMPER_SETTINGS
-
 
 
 
