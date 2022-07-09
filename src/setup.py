@@ -35,11 +35,17 @@ setup(
 	],
 	license = "Apache2",
 	name = "jk_prettyprintobj",
+	package_data = {
+		"": [
+		],
+	},
 	packages = [
 		"jk_prettyprintobj",
 	],
-	version = "0.2022.1.18",
+	scripts = [
+	],
+	version = '0.2022.7.9',
 	zip_safe = False,
 	long_description = readme(),
-	long_description_content_type="text/markdown",
+	long_description_content_type = "text/markdown",
 )

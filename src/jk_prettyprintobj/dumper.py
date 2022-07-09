@@ -563,6 +563,10 @@ class Dumper(object):
 			printFunc(line)
 	#
 
+	def toStr(self) -> str:
+		return "\n".join(self.__outputLines)
+	#
+
 #
 
 
@@ -573,7 +577,7 @@ class DumpMixin:
 
 	__slots__ = tuple()
 
-	def dump(self, prefix:str = None, printFunc = None):
+	def dump(self, prefix:str = None, printFunc = None) -> None:
 		dumper = Dumper()
 		with dumper.createContext(self, prefix) as dumper2:
 			if not dumper2._isDumpableObj(self):
@@ -581,6 +585,30 @@ class DumpMixin:
 			dumper2._dumpObj("", self)
 		dumper.print(printFunc)
 	#
+
+	def dumpToStr(self, prefix:str = None) -> str:
+		dumper = Dumper()
+		with dumper.createContext(self, prefix) as dumper2:
+			if not dumper2._isDumpableObj(self):
+				raise Exception("Improper object encountered for prettyprinting: " + self.__class__.__name__ + " - Either implement _dump(ctx:DumpCtx) or _dumpVarNames()!")
+			dumper2._dumpObj("", self)
+		return dumper.toStr()
+	#
+
+	################################################################
+	# NOTE: Dumpable objects must implement one of these methods:
+	#
+	#	def _dump(self, ctx:DumpCtx):
+	#		ctx.dumpVar(...)
+	#	#
+	#
+	#	def _dumpVarNames(self) -> typing.List[str]:
+	#		return [
+	#			"....",
+	#		]
+	#	#
+	#
+	################################################################
 
 #
 
