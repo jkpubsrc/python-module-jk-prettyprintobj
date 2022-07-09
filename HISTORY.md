@@ -13,3 +13,5 @@
 * 2021-02-18
 	* Better formatting of byte sequences
 
+* 2021-07-09:
+	* Added: dumpToStr()
