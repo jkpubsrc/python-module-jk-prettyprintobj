@@ -427,9 +427,9 @@ class DumpCtx(object):
 				self.outputLines.append(self.prefix + "\t" + sOfs + "  " + chunk + "  " + sAscii)
 
 			if len(value) == 1:
-				self.outputLines.append(self.prefix + "\t1 byte")
+				self.outputLines.append(self.prefix + "\ttotal: 1 byte")
 			else:
-				self.outputLines.append(self.prefix + "\t" + str(len(value)) + " bytes")
+				self.outputLines.append(self.prefix + "\ttotal: " + str(len(value)) + " bytes")
 
 			self.outputLines.append(self.prefix + ">")
 	#
