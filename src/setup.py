@@ -25,7 +25,7 @@ setup(
 		"Topic :: Software Development :: Testing",
 	],
 	description = "This python module provides a mixin for creating pretty debugging output for objects. This is especially useful for semi-complex data structures.",
-	include_package_data = False,
+	include_package_data = True,
 	install_requires = [
 	],
 	keywords = [
@@ -44,7 +44,7 @@ setup(
 	],
 	scripts = [
 	],
-	version = '0.2022.7.9',
+	version = '0.2022.8.15',
 	zip_safe = False,
 	long_description = readme(),
 	long_description_content_type = "text/markdown",

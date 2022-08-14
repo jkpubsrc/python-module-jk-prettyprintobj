@@ -3,6 +3,8 @@
 import chunk
 import typing
 import collections
+import math
+import codecs
 #import datetime
 
 from ._Hex import _Hex
@@ -21,7 +23,8 @@ class DumperSettings(object):
 		self.showComplexStructsWithType = False
 		self.compactSequenceLengthLimit = 8
 		self.compactSequenceItemLengthLimit = 50
-		self.bytesLineSize = 128
+		self.bytesLineSize = 32
+		self.compactBytesLinesLengthLimit = 32
 	#
 
 #
@@ -89,6 +92,100 @@ def _byteChunker(data:bytes, chunkSize:int) -> typing.Sequence[bytes]:
 		yield data[iFrom:iTo]
 		iFrom = iTo
 		iTo += chunkSize
+#
+
+def _x_byteChunkToHex(data:bytes) -> str:
+	hexSpanLength = 16		# == 8 bytes for a span
+
+	s = codecs.encode(data, "hex").decode("ascii")
+	chunks = [ s[i:i+hexSpanLength] for i in range(0, len(s), hexSpanLength) ]
+	return " ".join(chunks)
+#
+
+def _x_byteChunkToASCII(data:bytes) -> str:
+	spanLength = 8		# == 8 bytes for a span
+
+	ret = []
+	for i, b in enumerate(data):
+		if (i % spanLength) == 0:
+			ret.append(" ")
+		if 32 <= b <= 127:
+			ret.append(chr(b))
+		else:
+			ret.append(".")
+
+	return "".join(ret)
+#
+
+#
+# Returns chunks of the specified data.
+#
+def _byteChunkerWithOfs(settings:DumperSettings, data:bytes, processorName:str = None) -> typing.Sequence[typing.Tuple[str,str,str]]:
+	assert isinstance(settings, DumperSettings)
+	assert isinstance(data, bytes)
+	chunkSize = settings.bytesLineSize
+	assert isinstance(chunkSize, int)
+	assert chunkSize > 0
+	hexStrPadded = chunkSize*2 + math.ceil(chunkSize / 8) - 1
+	if processorName is not None:
+		assert isinstance(processorName, str)
+
+	# ----
+
+	nTotalLength = len(data)
+	nTotalLines = math.ceil(nTotalLength / chunkSize)
+	formatStrFragment = None
+	formatStrFragmentEllipsis = None
+	if nTotalLength <= 256*256:
+		formatStrFragment = "{:04x}"
+		formatStrFragmentEllipsis = "... "
+	elif nTotalLength <= 256*256*256:
+		formatStrFragment = "{:06x}"
+		formatStrFragmentEllipsis = "...   "
+	else:
+		formatStrFragment = "{:08x}"
+		formatStrFragmentEllipsis = "...     "
+
+	# ----
+
+	skipFrom = -1
+	skipTo = -1
+	if processorName:
+		if processorName == "shorten":
+			skipFrom = settings.compactBytesLinesLengthLimit
+			skipTo = nTotalLines - 4
+			if skipFrom >= skipTo:
+				skipFrom = -1
+				skipTo = -1
+		else:
+			raise Exception("No such postprocessor: " + repr(processorName))
+
+	# ----
+
+	if skipFrom < 0:
+		# direct loop, no addtional if statements
+		iFrom = 0
+		iTo = chunkSize
+		while iFrom < len(data):
+			chunk = data[iFrom:iTo]
+			yield formatStrFragment.format(iFrom), _x_byteChunkToHex(chunk).ljust(hexStrPadded), _x_byteChunkToASCII(chunk)
+			iFrom = iTo
+			iTo += chunkSize
+	else:
+		# loop with if statements
+		lineNo = 0
+		iFrom = 0
+		iTo = chunkSize
+		while iFrom < len(data):
+			chunk = data[iFrom:iTo]
+			if skipFrom <= lineNo <= skipTo:
+				if skipFrom == lineNo:
+					yield formatStrFragmentEllipsis, "...".ljust(hexStrPadded), "..."
+			else:
+				yield formatStrFragment.format(iFrom), _x_byteChunkToHex(chunk).ljust(hexStrPadded), _x_byteChunkToASCII(chunk)
+			iFrom = iTo
+			iTo += chunkSize
+			lineNo += 1
 #
 
 
@@ -326,20 +423,15 @@ class DumpCtx(object):
 		else:
 			self.outputLines.append(self.prefix + extraPrefix + e + "<")
 
-			formatStrFragment = None
-			if len(value) <= 256*256:
-				formatStrFragment = "\t{:04x} "
-			elif len(value) <= 256*256*256:
-				formatStrFragment = "\t{:06x} "
+			for sOfs, chunk, sAscii in _byteChunkerWithOfs(self.__s, value, processorName):
+				self.outputLines.append(self.prefix + "\t" + sOfs + "  " + chunk + "  " + sAscii)
+
+			if len(value) == 1:
+				self.outputLines.append(self.prefix + "\t1 byte")
 			else:
-				formatStrFragment = "\t{:08x} "
+				self.outputLines.append(self.prefix + "\t" + str(len(value)) + " bytes")
 
-			i = 0
-			for chunk in _byteChunker(value, self.__s.bytesLineSize):
-				self.outputLines.append(self.prefix + formatStrFragment.format(i) + repr(chunk))
-				i += self.__s.bytesLineSize
-
-			self.outputLines.append(self.prefix + "]")
+			self.outputLines.append(self.prefix + ">")
 	#
 
 	#

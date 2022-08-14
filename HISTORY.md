@@ -15,3 +15,7 @@
 
 * 2021-07-09:
 	* Added: dumpToStr()
+
+* 2022-08-14:
+	* Added: Hex output of binary data
+
