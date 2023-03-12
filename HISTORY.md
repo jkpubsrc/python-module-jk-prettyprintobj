@@ -19,3 +19,5 @@
 * 2022-08-14:
 	* Added: Hex output of binary data
 
+* 2023-03-11:
+	* Added: Support for unprocessed (raw) output
