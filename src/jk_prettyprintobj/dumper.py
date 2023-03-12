@@ -223,6 +223,14 @@ class _Omitted:
 	pass
 #
 
+class RawValue:
+
+	def __init__(self, text:str) -> None:
+		self.text = text
+	#
+
+#
+
 _OMITTED = _Omitted()
 
 
@@ -249,6 +257,10 @@ class DumpCtx(object):
 	#
 	def dumpVar(self, varName:str, value, processorName:str = None) -> None:
 		self._dumpX(varName + " = ", value, processorName)
+	#
+
+	def dumpVarRaw(self, varName:str, value:RawValue) -> None:
+		self._dumpX(varName + " = ", value.text)
 	#
 
 	#
@@ -299,6 +311,14 @@ class DumpCtx(object):
 	def _dumpX(self, extraPrefix:str, value, processorName:str = None):
 		if value is None:
 			self._dumpPrimitive(extraPrefix, None, processorName)
+			return
+
+		# is it a raw value?
+
+		if isinstance(value, RawValue):
+			if processorName is not None:
+				raise Exception("Raw values can not have processors.")
+			self._dumpRawValue(extraPrefix, value)
 			return
 
 		# is it one of our types?
@@ -503,6 +523,10 @@ class DumpCtx(object):
 
 	def _dumpPrimitive(self, extraPrefix:str, value, processorName:str = None):
 		self.outputLines.append(self.prefix + extraPrefix + self._primitiveValueToStr(value, processorName))
+	#
+
+	def _dumpRawValue(self, extraPrefix:str, value:RawValue):
+		self.outputLines.append(self.prefix + extraPrefix + value.text)
 	#
 
 	def _dumpOmitted(self, extraPrefix:str, value, processorName:str = None):

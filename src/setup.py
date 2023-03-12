@@ -44,7 +44,7 @@ setup(
 	],
 	scripts = [
 	],
-	version = '0.2022.8.15',
+	version = '0.2023.3.11',
 	zip_safe = False,
 	long_description = readme(),
 	long_description_content_type = "text/markdown",
