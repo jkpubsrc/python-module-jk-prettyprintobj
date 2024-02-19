@@ -21,3 +21,7 @@
 
 * 2023-03-11:
 	* Added: Support for unprocessed (raw) output
+
+* 2024-02-18:
+	* Added: Shortening objects
+

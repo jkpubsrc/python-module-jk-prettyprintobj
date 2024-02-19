@@ -6,3 +6,8 @@ examples/__pycache__/
 .svn/
 .vscode
 src/build/
+install*.sh
+uninstall*.sh
+publish*.sh
+*.OLD
+**/*.OLD

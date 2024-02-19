@@ -12,6 +12,40 @@ from ._Bits import _Bits
 
 
 
+################################################################################################################################
+################################################################################################################################
+##
+## Dumpable objects should use the following import:
+##
+##		import jk_prettyprintobj
+##
+## Dumpable objects should then be defined like this:
+##
+##		class FooBar(SomeBaseClassA,SomeMixinB,jk_prettyprintobj.DumpMixin)
+##			....
+##		#
+##
+## Dumpable objects should then implement one of these two methods:
+##
+##		def _dump(self, ctx:jk_prettyprintobj.DumpCtx):
+##			ctx.dumpVar(...)
+##		#
+##
+## or:
+##
+##		def _dumpVarNames(self) -> typing.List[str]:
+##			return [
+##				"....",
+##			]
+##		#
+##
+################################################################################################################################
+################################################################################################################################
+
+
+
+
+
 
 
 
@@ -332,7 +366,7 @@ class DumpCtx(object):
 		# is it an object with a DumpMixin?
 
 		if isinstance(value, DumpMixin):
-			self._dumpObj(extraPrefix, value)
+			self._dumpObj(extraPrefix, value, processorName)
 			return
 
 		# is it derived from on of our types?
@@ -362,19 +396,26 @@ class DumpCtx(object):
 	#
 	# Dump the specified object.
 	#
+	# @param	str processorName		(optional) The name of an output processor.
+	#									Supports: "shorten"
+	#
 	def _dumpObj(self, extraPrefix:str, value:object, processorName:str = None):
-		self.outputLines.append(self.prefix + extraPrefix + "<" + value.__class__.__name__ + "(")
+		if processorName == "shorten":
+			self.outputLines.append(self.prefix + extraPrefix + "<" + value.__class__.__name__ + "(...)>")
 
-		ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
-		with ctx as ctx2:
-			if hasattr(value, "_dump"):
-				value._dump(ctx2)
-			elif hasattr(value, "_dumpVarNames"):
-				ctx2.dumpVars(value)
-			else:
-				raise Exception("Improper object encountered for prettyprinting: " + type(value).__name__)
+		else:
+			self.outputLines.append(self.prefix + extraPrefix + "<" + value.__class__.__name__ + "(")
 
-		self.outputLines.append(self.prefix + ")>")
+			ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
+			with ctx as ctx2:
+				if hasattr(value, "_dump"):
+					value._dump(ctx2)
+				elif hasattr(value, "_dumpVarNames"):
+					ctx2.dumpVars(value)
+				else:
+					raise Exception("Improper object encountered for prettyprinting: " + type(value).__name__)
+
+			self.outputLines.append(self.prefix + ")>")
 	#
 
 	#
@@ -710,21 +751,6 @@ class DumpMixin:
 			dumper2._dumpObj("", self)
 		return dumper.toStr()
 	#
-
-	################################################################
-	# NOTE: Dumpable objects must implement one of these methods:
-	#
-	#	def _dump(self, ctx:DumpCtx):
-	#		ctx.dumpVar(...)
-	#	#
-	#
-	#	def _dumpVarNames(self) -> typing.List[str]:
-	#		return [
-	#			"....",
-	#		]
-	#	#
-	#
-	################################################################
 
 #
 
