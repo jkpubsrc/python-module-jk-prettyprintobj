@@ -11,3 +11,4 @@ uninstall*.sh
 publish*.sh
 *.OLD
 **/*.OLD
+testing/*.sh

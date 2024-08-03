@@ -25,3 +25,8 @@
 * 2024-02-18:
 	* Added: Shortening objects
 
+* 2024-06-07:
+	* Improved shortening
+	* More testing
+	* Fixed: Raw output
+

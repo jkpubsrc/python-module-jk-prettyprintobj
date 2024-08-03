@@ -12,35 +12,6 @@ from ._Bits import _Bits
 
 
 
-################################################################################################################################
-################################################################################################################################
-##
-## Dumpable objects should use the following import:
-##
-##		import jk_prettyprintobj
-##
-## Dumpable objects should then be defined like this:
-##
-##		class FooBar(SomeBaseClassA,SomeMixinB,jk_prettyprintobj.DumpMixin)
-##			....
-##		#
-##
-## Dumpable objects should then implement one of these two methods:
-##
-##		def _dump(self, ctx:jk_prettyprintobj.DumpCtx):
-##			ctx.dumpVar(...)
-##		#
-##
-## or:
-##
-##		def _dumpVarNames(self) -> typing.List[str]:
-##			return [
-##				"....",
-##			]
-##		#
-##
-################################################################################################################################
-################################################################################################################################
 
 
 
@@ -226,7 +197,9 @@ def _byteChunkerWithOfs(settings:DumperSettings, data:bytes, processorName:str =
 
 
 
-POST_PROCESSORS = {
+_PRIMITIVE_POST_PROCESSORS = {
+	# map associating processor name to tuple consisting of type (or type list) and callable
+
 	"shorten": (str, _str_shortenText),
 	"hex": (int, _int_toHex),
 	"bit": (int, _int_toBits),
@@ -260,6 +233,7 @@ class _Omitted:
 class RawValue:
 
 	def __init__(self, text:str) -> None:
+		assert isinstance(text, str)
 		self.text = text
 	#
 
@@ -294,7 +268,7 @@ class DumpCtx(object):
 	#
 
 	def dumpVarRaw(self, varName:str, value:RawValue) -> None:
-		self._dumpX(varName + " = ", value.text)
+		self._dumpX(varName + " = ", value)
 	#
 
 	#
@@ -341,6 +315,10 @@ class DumpCtx(object):
 	#
 	# This method outputs a value (recursively).
 	# To achieve this this method analyses the data type of the specified value and invokes individual type processing methods if available.
+	#
+	# @param		str extraPrefix			(required) A prefix to use
+	# @param		any value				(optional) The value to print
+	# @param		str? processorName		(optional) A value output processor
 	#
 	def _dumpX(self, extraPrefix:str, value, processorName:str = None):
 		if value is None:
@@ -421,6 +399,9 @@ class DumpCtx(object):
 	#
 	# Dump the specified dictionary.
 	#
+	# @param		str processorName			(optional) The processor name. This name is passed to recursive calls of _dumpX() so that it is applied
+	#											to every value. Additionally if "shorten" is specified the dictionary itself will be shortened.
+	#
 	def _dumpDict(self, extraPrefix:str, value:dict, processorName:str = None):
 		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
@@ -428,11 +409,17 @@ class DumpCtx(object):
 
 		ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 		with ctx as ctx2:
+			i = 0
 			for k, v in value.items():
+				if processorName == "shorten":
+					if i >= 3:
+						ctx2._dumpRawValue("", RawValue("..."))
+						break
 				if processorName == "omitValues":
 					v = _OMITTED
 				ctx2._dumpX(self._dictKeyToStr(k) + " : ", v)
 				self.outputLines[-1] += ","
+				i += 1
 
 		self.outputLines.append(self.prefix + "}")
 	#
@@ -454,20 +441,30 @@ class DumpCtx(object):
 	#
 	# Dump the specified list.
 	#
+	# @param		str processorName			(optional) The processor name. This name is passed to recursive calls of _dumpX() so that it is applied
+	#											to every value. Additionally if "shorten" is specified the list itself will be shortened.
+	#
 	def _dumpList(self, extraPrefix:str, value:list, processorName:str = None):
 		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
 		if self._canCompactSequence(value):
-			self.outputLines.append(self.prefix + extraPrefix + e + "[ " + self._compactSequence(value, processorName) + " ]")
+			rawText = self._compactSequence(value, processorName)
+			self.outputLines.append(self.prefix + extraPrefix + e + "[ " + rawText + " ]")
 
 		else:
 			self.outputLines.append(self.prefix + extraPrefix + e + "[")
 
 			ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 			with ctx as ctx2:
+				i = 0
 				for vItem in value:
+					if processorName == "shorten":
+						if i >= 3:
+							ctx2._dumpRawValue("", RawValue("..."))
+							break
 					ctx2._dumpX("", vItem, processorName)
 					self.outputLines[-1] += ","
+					i += 1
 
 			self.outputLines.append(self.prefix + "]")
 	#
@@ -498,20 +495,30 @@ class DumpCtx(object):
 	#
 	# Dump the specified tuple.
 	#
+	# @param		str processorName			(optional) The processor name. This name is passed to recursive calls of _dumpX() so that it is applied
+	#											to every value. Additionally if "shorten" is specified the list itself will be shortened.
+	#
 	def _dumpTuple(self, extraPrefix:str, value:set, processorName:str = None):
 		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
 		if self._canCompactSequence(value):
-			self.outputLines.append(self.prefix + extraPrefix + e + "( " + self._compactSequence(value, processorName) + " )")
+			rawText = self._compactSequence(value, processorName)
+			self.outputLines.append(self.prefix + extraPrefix + e + "( " + rawText + " )")
 
 		else:
 			self.outputLines.append(self.prefix + extraPrefix + e + "(")
 
 			ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
 			with ctx as ctx2:
+				i = 0
 				for vItem in value:
+					if processorName == "shorten":
+						if i >= 3:
+							ctx2._dumpRawValue("", RawValue("..."))
+							break
 					ctx2._dumpX("", vItem, processorName)
 					self.outputLines[-1] += ","
+					i += 1
 
 			self.outputLines.append(self.prefix + ")")
 	#
@@ -591,6 +598,7 @@ class DumpCtx(object):
 		return True
 	#
 
+	# TODO: support "shorten" to shorten the list
 	def _compactSequence(self, someSequence, processorName:str = None) -> str:
 		ret = []
 		for v in someSequence:
@@ -627,9 +635,9 @@ class DumpCtx(object):
 		else:
 			# process value before converting it to str
 			if processorName:
-				if processorName not in POST_PROCESSORS:
+				if processorName not in _PRIMITIVE_POST_PROCESSORS:
 					raise Exception("No such postprocessor: " + repr(processorName))
-				postProcessorTypeCompatibility, postProcessor = POST_PROCESSORS[processorName]
+				postProcessorTypeCompatibility, postProcessor = _PRIMITIVE_POST_PROCESSORS[processorName]
 				if isinstance(value, postProcessorTypeCompatibility):
 					value = postProcessor(value)
 
@@ -726,6 +734,37 @@ class Dumper(object):
 
 #
 
+
+
+
+
+################################################################################################################################
+################################################################################################################################
+"""
+
+Dumpable objects should be defined like this:
+
+	class FooBar(SomeBaseClassA,SomeMixinB,jk_prettyprintobj.DumpMixin)
+		....
+	#
+
+Dumpable objects should then implement one of these two methods:
+
+	def _dump(self, ctx:jk_prettyprintobj.DumpCtx):
+		ctx.dumpVar(...)
+	#
+
+or:
+
+	def _dumpVarNames(self) -> typing.List[str]:
+		return [
+			"....",
+		]
+	#
+
+"""
+################################################################################################################################
+################################################################################################################################
 
 
 
