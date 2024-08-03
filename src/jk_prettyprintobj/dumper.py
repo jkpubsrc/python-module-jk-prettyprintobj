@@ -7,8 +7,12 @@ import math
 import codecs
 #import datetime
 
+from .RawValue import RawValue
+from .DumperSettings import DumperSettings
 from ._Hex import _Hex
 from ._Bits import _Bits
+from ._ConverterFunctions import _ConverterFunctions as _CF
+from ._ByteChunker import _ByteChunker
 
 
 
@@ -16,182 +20,9 @@ from ._Bits import _Bits
 
 
 
-
-
-
-
-class DumperSettings(object):
-
-	def __init__(self):
-		self.showPrimitivesWithType = False
-		self.showDictKeysWithType = False
-		self.showComplexStructsWithType = False
-		self.compactSequenceLengthLimit = 8
-		self.compactSequenceItemLengthLimit = 50
-		self.bytesLineSize = 32
-		self.compactBytesLinesLengthLimit = 32
-	#
-
-#
 
 DEFAULT_DUMPER_SETTINGS = DumperSettings()
 
-
-
-
-def _str_shortenText(text:str) -> str:
-	if len(text) > 40:
-		return text[:40] + "..."
-	else:
-		return text
-#
-
-def _float_roundTo7FractionDigits(data:typing.Union[int,float]) -> float:
-	return round(data, 7)
-#
-
-def _float_roundTo6FractionDigits(data:typing.Union[int,float]) -> float:
-	return round(data, 6)
-#
-
-def _float_roundTo5FractionDigits(data:typing.Union[int,float]) -> float:
-	return round(data, 5)
-#
-
-def _float_roundTo4FractionDigits(data:typing.Union[int,float]) -> float:
-	return round(data, 4)
-#
-
-def _float_roundTo3FractionDigits(data:typing.Union[int,float]) -> float:
-	return round(data, 3)
-#
-
-def _float_roundTo2FractionDigits(data:typing.Union[int,float]) -> float:
-	return round(data, 2)
-#
-
-def _float_roundTo1FractionDigits(data:typing.Union[int,float]) -> float:
-	return round(data, 1)
-#
-
-def _int_toHex(data:int) -> typing.Union[int,str]:
-	if data < 0:
-		return data
-	return _Hex(data)
-#
-
-def _int_toBits(data:int) -> typing.Union[int,str]:
-	if data < 0:
-		return data
-	return _Bits(data)
-#
-
-def _byteChunker(data:bytes, chunkSize:int) -> typing.Sequence[bytes]:
-	assert isinstance(data, bytes)
-	assert isinstance(chunkSize, int)
-	assert chunkSize > 0
-
-	iFrom = 0
-	iTo = chunkSize
-	while iFrom < len(data):
-		yield data[iFrom:iTo]
-		iFrom = iTo
-		iTo += chunkSize
-#
-
-def _x_byteChunkToHex(data:bytes) -> str:
-	hexSpanLength = 16		# == 8 bytes for a span
-
-	s = codecs.encode(data, "hex").decode("ascii")
-	chunks = [ s[i:i+hexSpanLength] for i in range(0, len(s), hexSpanLength) ]
-	return " ".join(chunks)
-#
-
-def _x_byteChunkToASCII(data:bytes) -> str:
-	spanLength = 8		# == 8 bytes for a span
-
-	ret = []
-	for i, b in enumerate(data):
-		if (i % spanLength) == 0:
-			ret.append(" ")
-		if 32 <= b <= 127:
-			ret.append(chr(b))
-		else:
-			ret.append(".")
-
-	return "".join(ret)
-#
-
-#
-# Returns chunks of the specified data.
-#
-def _byteChunkerWithOfs(settings:DumperSettings, data:bytes, processorName:str = None) -> typing.Sequence[typing.Tuple[str,str,str]]:
-	assert isinstance(settings, DumperSettings)
-	assert isinstance(data, bytes)
-	chunkSize = settings.bytesLineSize
-	assert isinstance(chunkSize, int)
-	assert chunkSize > 0
-	hexStrPadded = chunkSize*2 + math.ceil(chunkSize / 8) - 1
-	if processorName is not None:
-		assert isinstance(processorName, str)
-
-	# ----
-
-	nTotalLength = len(data)
-	nTotalLines = math.ceil(nTotalLength / chunkSize)
-	formatStrFragment = None
-	formatStrFragmentEllipsis = None
-	if nTotalLength <= 256*256:
-		formatStrFragment = "{:04x}"
-		formatStrFragmentEllipsis = "... "
-	elif nTotalLength <= 256*256*256:
-		formatStrFragment = "{:06x}"
-		formatStrFragmentEllipsis = "...   "
-	else:
-		formatStrFragment = "{:08x}"
-		formatStrFragmentEllipsis = "...     "
-
-	# ----
-
-	skipFrom = -1
-	skipTo = -1
-	if processorName:
-		if processorName == "shorten":
-			skipFrom = settings.compactBytesLinesLengthLimit
-			skipTo = nTotalLines - 4
-			if skipFrom >= skipTo:
-				skipFrom = -1
-				skipTo = -1
-		else:
-			raise Exception("No such postprocessor: " + repr(processorName))
-
-	# ----
-
-	if skipFrom < 0:
-		# direct loop, no addtional if statements
-		iFrom = 0
-		iTo = chunkSize
-		while iFrom < len(data):
-			chunk = data[iFrom:iTo]
-			yield formatStrFragment.format(iFrom), _x_byteChunkToHex(chunk).ljust(hexStrPadded), _x_byteChunkToASCII(chunk)
-			iFrom = iTo
-			iTo += chunkSize
-	else:
-		# loop with if statements
-		lineNo = 0
-		iFrom = 0
-		iTo = chunkSize
-		while iFrom < len(data):
-			chunk = data[iFrom:iTo]
-			if skipFrom <= lineNo <= skipTo:
-				if skipFrom == lineNo:
-					yield formatStrFragmentEllipsis, "...".ljust(hexStrPadded), "..."
-			else:
-				yield formatStrFragment.format(iFrom), _x_byteChunkToHex(chunk).ljust(hexStrPadded), _x_byteChunkToASCII(chunk)
-			iFrom = iTo
-			iTo += chunkSize
-			lineNo += 1
-#
 
 
 
@@ -200,27 +31,27 @@ def _byteChunkerWithOfs(settings:DumperSettings, data:bytes, processorName:str =
 _PRIMITIVE_POST_PROCESSORS = {
 	# map associating processor name to tuple consisting of type (or type list) and callable
 
-	"shorten": (str, _str_shortenText),
-	"hex": (int, _int_toHex),
-	"bit": (int, _int_toBits),
-	"round1": ((float, int), _float_roundTo1FractionDigits),
-	"round2": ((float, int), _float_roundTo2FractionDigits),
-	"round3": ((float, int), _float_roundTo3FractionDigits),
-	"round4": ((float, int), _float_roundTo4FractionDigits),
-	"round5": ((float, int), _float_roundTo5FractionDigits),
-	"round6": ((float, int), _float_roundTo6FractionDigits),
-	"round7": ((float, int), _float_roundTo7FractionDigits),
+	"shorten": (str, _CF.str_shortenText),
+	"hex": (int, _CF.int_toHex),
+	"bit": (int, _CF.int_toBits),
+	"round1": ((float, int), _CF.float_roundTo1FractionDigits),
+	"round2": ((float, int), _CF.float_roundTo2FractionDigits),
+	"round3": ((float, int), _CF.float_roundTo3FractionDigits),
+	"round4": ((float, int), _CF.float_roundTo4FractionDigits),
+	"round5": ((float, int), _CF.float_roundTo5FractionDigits),
+	"round6": ((float, int), _CF.float_roundTo6FractionDigits),
+	"round7": ((float, int), _CF.float_roundTo7FractionDigits),
 
-	"str_shorten": (str, _str_shortenText),
-	"float_round7": ((float, int), _float_roundTo7FractionDigits),
-	"float_round6": ((float, int), _float_roundTo6FractionDigits),
-	"float_round5": ((float, int), _float_roundTo5FractionDigits),
-	"float_round4": ((float, int), _float_roundTo4FractionDigits),
-	"float_round3": ((float, int), _float_roundTo3FractionDigits),
-	"float_round2": ((float, int), _float_roundTo2FractionDigits),
-	"float_round1": ((float, int), _float_roundTo1FractionDigits),
-	"int_hex": (int, _int_toHex),
-	"int_bit": (int, _int_toBits),
+	"str_shorten": (str, _CF.str_shortenText),
+	"float_round7": ((float, int), _CF.float_roundTo7FractionDigits),
+	"float_round6": ((float, int), _CF.float_roundTo6FractionDigits),
+	"float_round5": ((float, int), _CF.float_roundTo5FractionDigits),
+	"float_round4": ((float, int), _CF.float_roundTo4FractionDigits),
+	"float_round3": ((float, int), _CF.float_roundTo3FractionDigits),
+	"float_round2": ((float, int), _CF.float_roundTo2FractionDigits),
+	"float_round1": ((float, int), _CF.float_roundTo1FractionDigits),
+	"int_hex": (int, _CF.int_toHex),
+	"int_bit": (int, _CF.int_toBits),
 }
 
 
@@ -230,24 +61,17 @@ class _Omitted:
 	pass
 #
 
-class RawValue:
-
-	def __init__(self, text:str) -> None:
-		assert isinstance(text, str)
-		self.text = text
-	#
-
-#
-
 _OMITTED = _Omitted()
 
 
 
 
 
+DumpCtx = typing.NewType("DumpCtx", object)
+
 class DumpCtx(object):
 
-	_TYPE_MAP = {}				# type -> function
+	_TYPE_MAP:typing.Dict[type,typing.Callable[[DumpCtx,str,typing.Any,typing.Union[str,None]],None]] = {}				# type -> function
 
 	def __init__(self, s:DumperSettings, outputLines:list, exitAppend:str, prefix:str):
 		self.__s = s
@@ -313,7 +137,7 @@ class DumpCtx(object):
 	################################################################################################################################
 
 	#
-	# This method outputs a value (recursively).
+	# This method outputs a value (recursively). It is the main dump method.
 	# To achieve this this method analyses the data type of the specified value and invokes individual type processing methods if available.
 	#
 	# @param		str extraPrefix			(required) A prefix to use
@@ -347,7 +171,7 @@ class DumpCtx(object):
 			self._dumpObj(extraPrefix, value, processorName)
 			return
 
-		# is it derived from on of our types?
+		# is it derived from one of our types?
 
 		for storedT, m in DumpCtx._TYPE_MAP.items():
 			if isinstance(value, storedT):
@@ -379,7 +203,10 @@ class DumpCtx(object):
 	#
 	def _dumpObj(self, extraPrefix:str, value:object, processorName:str = None):
 		if processorName == "shorten":
-			self.outputLines.append(self.prefix + extraPrefix + "<" + value.__class__.__name__ + "(...)>")
+			if hasattr(value, "_dumpShort"):
+				value._dumpShort(ctx2)
+			else:
+				self.outputLines.append(self.prefix + extraPrefix + "<" + value.__class__.__name__ + "(...)>")
 
 		else:
 			self.outputLines.append(self.prefix + extraPrefix + "<" + value.__class__.__name__ + "(")
@@ -481,7 +308,7 @@ class DumpCtx(object):
 		else:
 			self.outputLines.append(self.prefix + extraPrefix + e + "<")
 
-			for sOfs, chunk, sAscii in _byteChunkerWithOfs(self.__s, value, processorName):
+			for sOfs, chunk, sAscii in _ByteChunker.chunkWithOfs(self.__s, value, processorName):
 				self.outputLines.append(self.prefix + "\t" + sOfs + "  " + chunk + "  " + sAscii)
 
 			if len(value) == 1:
@@ -760,6 +587,12 @@ or:
 		return [
 			"....",
 		]
+	#
+
+and maybe additionally:
+
+	def _dumpShort(self, ctx:jk_prettyprintobj.DumpCtx):
+		ctx.dumpVar(...)
 	#
 
 """

@@ -13,20 +13,23 @@
 * 2021-02-18
 	* Better formatting of byte sequences
 
-* 2021-07-09:
+* 2021-07-09
 	* Added: dumpToStr()
 
-* 2022-08-14:
+* 2022-08-14
 	* Added: Hex output of binary data
 
-* 2023-03-11:
+* 2023-03-11
 	* Added: Support for unprocessed (raw) output
 
-* 2024-02-18:
+* 2024-02-18
 	* Added: Shortening objects
 
-* 2024-06-07:
+* 2024-06-07
 	* Improved shortening
 	* More testing
 	* Fixed: Raw output
+
+* 2024-08-03
+	* Refactoring
 
