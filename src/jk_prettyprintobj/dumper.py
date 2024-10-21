@@ -606,22 +606,30 @@ class DumpMixin:
 
 	__slots__ = tuple()
 
-	def dump(self, prefix:str = None, printFunc = None) -> None:
+	def __dump(self, prefix:str = None) -> Dumper:
 		dumper = Dumper()
 		with dumper.createContext(self, prefix) as dumper2:
 			if not dumper2._isDumpableObj(self):
 				raise Exception("Improper object encountered for prettyprinting: " + self.__class__.__name__ + " - Either implement _dump(ctx:DumpCtx) or _dumpVarNames()!")
 			dumper2._dumpObj("", self)
+		return dumper
+	#
+
+	def dump(self, prefix:str = None, printFunc = None) -> None:
+		dumper = self.__dump(prefix)
 		dumper.print(printFunc)
 	#
 
 	def dumpToStr(self, prefix:str = None) -> str:
-		dumper = Dumper()
-		with dumper.createContext(self, prefix) as dumper2:
-			if not dumper2._isDumpableObj(self):
-				raise Exception("Improper object encountered for prettyprinting: " + self.__class__.__name__ + " - Either implement _dump(ctx:DumpCtx) or _dumpVarNames()!")
-			dumper2._dumpObj("", self)
+		dumper = self.__dump(prefix)
 		return dumper.toStr()
+	#
+
+	def dumpToFile(self, filePath:str) -> None:
+		dumper = self.__dump()
+		assert isinstance(filePath, str)
+		with open(filePath, "w", newline="\n", encoding="UTF-8") as fout:
+			fout.write(dumper.toStr())
 	#
 
 #
