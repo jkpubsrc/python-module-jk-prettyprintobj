@@ -36,3 +36,6 @@
 * 2024-10-20
 	* Added: pprint()
 
+* 2024-10-25
+	* Removed: Unnecessary dependencies
+

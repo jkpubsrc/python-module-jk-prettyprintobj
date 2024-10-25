@@ -2,7 +2,7 @@
 
 
 __author__ = "Jürgen Knauth"
-__version__ = "0.2024.10.20"
+__version__ = "0.2024.10.25"
 __all__ = (
 	"DumperSettings",
 	"RawValue",

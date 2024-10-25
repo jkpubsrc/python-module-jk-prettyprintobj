@@ -1,16 +1,12 @@
 
 
-import chunk
 import typing
 import collections
-import math
-import codecs
-#import datetime
 
 from .RawValue import RawValue
 from .DumperSettings import DumperSettings
-from ._Hex import _Hex
-from ._Bits import _Bits
+#from ._Hex import _Hex
+#from ._Bits import _Bits
 from ._ConverterFunctions import _ConverterFunctions as _CF
 from ._ByteChunker import _ByteChunker
 
