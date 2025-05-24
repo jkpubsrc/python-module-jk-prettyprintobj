@@ -397,7 +397,18 @@ class DumpCtx(object):
 	#
 
 	def _dumpRawValue(self, extraPrefix:str, value:RawValue):
-		self.outputLines.append(self.prefix + extraPrefix + value.text)
+		if isinstance(value.textOrLines, str):
+			self.outputLines.append(self.prefix + extraPrefix + value.textOrLines)
+			return
+
+		firstLine = value.textOrLines[0]
+		moreLines = value.textOrLines[1:]
+
+		self.outputLines.append(self.prefix + extraPrefix + firstLine)
+
+		_prefix2 = self.prefix + " " * len(extraPrefix)
+		for line in moreLines:
+			self.outputLines.append(_prefix2 + line)
 	#
 
 	def _dumpOmitted(self, extraPrefix:str, value, processorName:str = None):

@@ -1,5 +1,10 @@
 
 
+import typing
+
+
+
+
 
 #
 # Represents a value that should be written directly without any automatic formatting.
@@ -17,11 +22,11 @@ class RawValue(object):
 	#
 	# Constructor method.
 	#
-	def __init__(self, text:str) -> None:
-		assert isinstance(text, str)
-		assert text
+	def __init__(self, textOrLines:typing.Union[str,typing.List[str],typing.Tuple[str]]) -> None:
+		assert isinstance(textOrLines, (str,tuple,list))
+		assert textOrLines
 
-		self.text = text
+		self.textOrLines = textOrLines
 	#
 
 	################################################################################################################################

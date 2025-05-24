@@ -39,3 +39,6 @@
 * 2024-10-25
 	* Removed: Unnecessary dependencies
 
+* 2025-05-24
+	* Improved: Raw output
+
