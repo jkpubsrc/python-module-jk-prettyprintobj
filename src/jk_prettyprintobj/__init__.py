@@ -2,7 +2,7 @@
 
 
 __author__ = "Jürgen Knauth"
-__version__ = "0.2025.5.24"
+__version__ = "0.2025.6.19"
 __email__ = "pubsrc@binary-overflow.de"
 __license__ = "Apache2"
 __copyright__ = "Copyright (c) 2020-2025, Jürgen Knauth"
@@ -16,6 +16,7 @@ __all__ = (
 	"DumpCtx",
 	"DEFAULT_DUMPER_SETTINGS",
 	"pprint",
+	"NamedTupleDumpMixinMeta",
 )
 
 
@@ -25,6 +26,7 @@ __all__ = (
 from .DumperSettings import DumperSettings
 from .RawValue import RawValue
 from .dumper import DumpMixin, Dumper, DumpCtx, DEFAULT_DUMPER_SETTINGS
+from .NamedTupleDumpMixinMeta import NamedTupleDumpMixinMeta
 
 from builtins import print as _print
 

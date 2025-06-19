@@ -42,3 +42,6 @@
 * 2025-05-24
 	* Improved: Raw output
 
+* 2025-06-19
+	* Added: NamedTupleDumpMixinMeta
+
