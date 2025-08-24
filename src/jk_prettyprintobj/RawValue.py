@@ -24,7 +24,6 @@ class RawValue(object):
 	#
 	def __init__(self, textOrLines:typing.Union[str,typing.List[str],typing.Tuple[str]]) -> None:
 		assert isinstance(textOrLines, (str,tuple,list))
-		assert textOrLines
 
 		self.textOrLines = textOrLines
 	#

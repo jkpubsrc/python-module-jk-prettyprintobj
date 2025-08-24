@@ -1,47 +1,50 @@
-* 2021-01-04
+* 2021-01-04:
 	* Provided a variety of additional processors
 	* Provided full documentation of the module
 
-* 2021-02-10
+* 2021-02-10:
 	* Added empty __slots__ to DumpMixin to prevent classes derived from getting a __dict__
 
-* 2021-02-17
+* 2021-02-17:
 	* Improved _canCompactSequence()
 	* Corrected type in dumper.py
 	* Improved value type detection
 
-* 2021-02-18
+* 2021-02-18:
 	* Better formatting of byte sequences
 
-* 2021-07-09
+* 2021-07-09:
 	* Added: dumpToStr()
 
-* 2022-08-14
+* 2022-08-14:
 	* Added: Hex output of binary data
 
-* 2023-03-11
+* 2023-03-11:
 	* Added: Support for unprocessed (raw) output
 
-* 2024-02-18
+* 2024-02-18:
 	* Added: Shortening objects
 
-* 2024-06-07
+* 2024-06-07:
 	* Improved shortening
 	* More testing
 	* Fixed: Raw output
 
-* 2024-08-03
+* 2024-08-03:
 	* Refactoring
 
-* 2024-10-20
+* 2024-10-20:
 	* Added: pprint()
 
-* 2024-10-25
+* 2024-10-25:
 	* Removed: Unnecessary dependencies
 
-* 2025-05-24
+* 2025-05-24:
 	* Improved: Raw output
 
-* 2025-06-19
+* 2025-06-19:
 	* Added: NamedTupleDumpMixinMeta
+
+* 2025-08-14:
+	* Improved: RawValue now tolerates empty strings
 
