@@ -566,6 +566,10 @@ class Dumper(object):
 		return "\n".join(self.__outputLines)
 	#
 
+	def toStrList(self) -> list[str]:
+		return self.__outputLines
+	#
+
 #
 
 
@@ -630,6 +634,11 @@ class DumpMixin:
 	def dumpToStr(self, prefix:str = None) -> str:
 		dumper = self.__dump(prefix)
 		return dumper.toStr()
+	#
+
+	def dumpToStrList(self, prefix:str = None) -> list[str]:
+		dumper = self.__dump(prefix)
+		return dumper.toStrList()
 	#
 
 	def dumpToFile(self, filePath:str) -> None:

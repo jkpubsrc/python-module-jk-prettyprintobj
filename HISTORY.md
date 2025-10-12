@@ -48,3 +48,6 @@
 * 2025-08-14:
 	* Improved: RawValue now tolerates empty strings
 
+* 2025-10-12:
+	* Improved: Added "dumpToStrList()"
+
