@@ -51,3 +51,13 @@
 * 2025-10-12:
 	* Improved: Added "dumpToStrList()"
 
+* 2025-11-13:
+	* Refactoring
+	* Improved: Dumping ordered dictionaries now supports the same processing specifiers as standard dictionaries
+
+* 2026-01-03:
+	* Added: Support for classes implementing collection.Mapping
+
+* 2026-06-07:
+	* Fixed: pprint() caching problem
+
