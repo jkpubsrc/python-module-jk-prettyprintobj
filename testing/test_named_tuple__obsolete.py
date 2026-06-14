@@ -11,7 +11,7 @@ import jk_prettyprintobj
 
 
 
-class SomeNamedTuple(typing.NamedTuple):
+class SomeNamedTuple(metaclass=jk_prettyprintobj.NamedTupleDumpMixinMeta):
 	foo:str
 	bar:int
 #
@@ -24,6 +24,6 @@ with jk_logging.wrapMain() as log:
 	# 	print(f"{k} = {getattr(SomeNamedTuple, k)}")
 
 	t = SomeNamedTuple("foo", 123)
-	jk_prettyprintobj.pprint(t)
+	t.dump()
 
 

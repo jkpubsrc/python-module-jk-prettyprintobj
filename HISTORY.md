@@ -61,3 +61,6 @@
 * 2026-06-07:
 	* Fixed: pprint() caching problem
 
+* 2026-06-14:
+	* Added: Support for named tuples
+

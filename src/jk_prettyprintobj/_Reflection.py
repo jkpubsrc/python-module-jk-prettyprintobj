@@ -2,22 +2,18 @@
 
 import typing
 
-from .dumper import DumpMixin
+# import jk_typing
+# import jk_utils
+# import jk_logging
+# import jk_json
+# import jk_prettyprintobj
 
 
 
-def _dumpVarNames_x(self):
-	return self._fields
-#
 
 
 
-#
-# This meta class can be used to implement dumpable named tuples.
-#
-# NOTE: This class seems not to work any more in more recent versions of Python.
-#
-class NamedTupleDumpMixinMeta(typing.NamedTupleMeta):
+class _Reflection(object):
 
 	################################################################################################################################
 	## Constants
@@ -43,24 +39,12 @@ class NamedTupleDumpMixinMeta(typing.NamedTupleMeta):
 	## Public Static Methods
 	################################################################################################################################
 
-	################################################################################################################################
-	## Special Methods
-	################################################################################################################################
-
-	def __new__(cls, typename, bases, ns):
-		if DumpMixin not in bases:
-			bases = ( DumpMixin, ) + bases
-		cls_obj = super().__new__(cls, typename+"_nm_base", bases, ns)
-		bases = bases + (cls_obj,)
-		return type(typename, bases, {
-			"_dumpVarNames": _dumpVarNames_x
-		})
+	@staticmethod
+	def isNamedTupleInstance(obj) -> bool:
+		return isinstance(obj, tuple) \
+			and hasattr(type(obj), "_fields") \
+			and isinstance(type(obj)._fields, tuple)
 	#
 
 #
-
-
-
-
-
 

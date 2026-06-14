@@ -10,6 +10,7 @@ from .DumperSettings import DumperSettings
 #from ._Bits import _Bits
 from ._ConverterFunctions import _ConverterFunctions as _CF
 from ._ByteChunker import _ByteChunker
+from ._Reflection import _Reflection
 
 
 
@@ -59,6 +60,7 @@ class _Omitted:
 #
 
 _OMITTED = _Omitted()
+
 
 
 
@@ -152,6 +154,12 @@ class DumpCtx(object):
 			if processorName is not None:
 				raise Exception("Raw values can not have processors.")
 			self._dumpRawValue(extraPrefix, value)
+			return
+
+		# is it a named tuple?
+
+		if _Reflection.isNamedTupleInstance(value):
+			self._dumpNamedTuple(extraPrefix, value, processorName)
 			return
 
 		# is it one of our types?
@@ -303,6 +311,25 @@ class DumpCtx(object):
 					i += 1
 
 			self.outputLines.append(self.prefix + "]")
+	#
+
+	#
+	# Dump the specified named tuple.
+	#
+	# @param		str processorName			(optional) The processor name. This name is passed to recursive calls of _dumpX() so that it is applied
+	#											to every value. Additionally if "shorten" is specified the list itself will be shortened.
+	#
+	def _dumpNamedTuple(self, extraPrefix:str, value:set, processorName:typing.Union[str,None] = None):
+		self.outputLines.append(self.prefix + extraPrefix + value.__class__.__name__ + "(")
+
+		ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
+		with ctx as ctx2:
+			i = 0
+			for k, v in zip(value._fields, value):
+				self.____dumpKVP(ctx2, k, v, i, processorName)
+				i += 1
+
+		self.outputLines.append(self.prefix + ")")
 	#
 
 	#
