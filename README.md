@@ -8,7 +8,7 @@ This python module provides a mixin for dumping objects. This is ment for debugg
 
 Information about this module can be found here:
 
-* [github.org](https://github.com/jkpubsrc/python-module-jk-prettyprintobj)
+* [github.com](https://github.com/jkpubsrc/python-module-jk-prettyprintobj)
 * [pypi.python.org](https://pypi.python.org/pypi/jk_prettyprintobj)
 
 How to use this module
