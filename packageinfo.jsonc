@@ -21,7 +21,7 @@
 		"license": "Apache2",
 		"name": "jk_prettyprintobj",
 		"packageClass": "python-module",
-		"version": "0.2026.8.26"
+		"version": "0.2026.11.22"
 	},
 	"requirements": {
 		"htmlcssjs_packages": [],

@@ -95,12 +95,15 @@ class DumpCtx(object):
 	#
 
 	#
-	# This method is invoked if an object implements _dumpVarNames()
+	# This method is invoked if an object implements _dumpVarNames() or _dumpVarNamesAuto()
 	#
 	def dumpVars(self, caller, *args):
 		if len(args) == 0:
 			if hasattr(caller, "_dumpVarNames"):
 				varNames = caller._dumpVarNames()
+				assert isinstance(varNames, (list, tuple))
+			elif hasattr(caller, "_dumpVarNamesAuto"):
+				varNames = caller._dumpVarNamesAuto()
 				assert isinstance(varNames, (list, tuple))
 			else:
 				raise Exception("Specify either variable names or a list of variables to dump!")
@@ -228,7 +231,7 @@ class DumpCtx(object):
 			with ctx as ctx2:
 				if hasattr(value, "_dump"):
 					value._dump(ctx2)
-				elif hasattr(value, "_dumpVarNames"):
+				elif hasattr(value, "_dumpVarNames") or hasattr(value, "_dumpVarNamesAuto"):
 					ctx2.dumpVars(value)
 				else:
 					raise Exception("Improper object encountered for prettyprinting: " + type(value).__name__)
@@ -522,6 +525,8 @@ class DumpCtx(object):
 			return True
 		if hasattr(obj, "_dumpVarNames"):
 			return True
+		if hasattr(obj, "_dumpVarNamesAuto"):
+			return True
 		return False
 	#
 
@@ -737,6 +742,10 @@ class DumpMixin:
 				raise Exception("Improper object encountered for prettyprinting: " + self.__class__.__name__ + " - Either implement _dump(ctx:DumpCtx) or _dumpVarNames()!")
 			dumper2._dumpObj("", self)
 		return dumper
+	#
+
+	def _dumpVarNamesAuto(self):
+		return _Reflection.getDumpVarNames(self)
 	#
 
 	def dump(self, prefix:typing.Union[str,None] = None, printFunc = None) -> None:

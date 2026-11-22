@@ -68,3 +68,6 @@
 	* Removed: Metaclass NamedTupleDumpMixinMeta removed
 	* Added: Decorator dumpable_namedtuple added
 
+* 2026-11-22:
+	* Added: _dumpVarNamesAuto() for automatic identication of instance variables and properties
+

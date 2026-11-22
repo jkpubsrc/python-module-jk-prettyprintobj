@@ -7,6 +7,15 @@ import jk_prettyprintobj
 
 
 
+
+
+
+
+NOW = datetime.datetime(2026, 12, 31, 23, 59, 59)
+NOW_UTC = datetime.datetime(2026, 12, 31, 23, 59, 59, tzinfo=datetime.timezone.utc)
+
+
+
 class Test2(jk_prettyprintobj.DumpMixin):
 
 	def __init__(self):
@@ -15,7 +24,7 @@ class Test2(jk_prettyprintobj.DumpMixin):
 		self.someBool = True
 		self.someNone = None
 		self.someFloat = 3.123
-		self.someDate = datetime.datetime.now()
+		self.someDate = NOW
 	#
 
 	def _dump(self, ctx:jk_prettyprintobj.DumpCtx):
@@ -30,6 +39,7 @@ class Test2(jk_prettyprintobj.DumpMixin):
 #
 
 
+
 NC = collections.namedtuple("NC", [ "a", "b" ])
 
 
@@ -42,26 +52,26 @@ class TestBase(object):
 		self.someBool = True
 		self.someNone = None
 		self.someFloat = 3.123
-		self.someDate = datetime.datetime.now()
+		self.someDate = NOW
 		self.someObj = Test2()
 		self.someList = [
 			"abc",
 			123,
-			datetime.datetime.now(),
-			datetime.datetime.utcnow(),
+			NOW,
+			NOW_UTC,
 			Test2(),
 		]
 		self.someTuple = (
 			"abc",
 			123,
-			datetime.datetime.now(),
-			datetime.datetime.utcnow(),
+			NOW,
+			NOW_UTC,
 			Test2(),
 		)
 		self.someSet = set([ 1, 3, 5, 7, 9 ])
 		self.someDict = {
 			"abc": 123,
-			"xyz": datetime.datetime.now(),
+			"xyz": NOW,
 			"test": Test2(),
 			None: True,
 			0: 12345,
@@ -84,85 +94,6 @@ class TestBase(object):
 	#
 
 #
-
-
-
-
-class Test_dumpVarNames(TestBase,jk_prettyprintobj.DumpMixin):
-
-	def _dumpVarNames(self) -> list:
-		return [
-			"someStr",
-			"someInt",
-			"someBool",
-			"someNone",
-			"someFloat",
-			"someDate",
-			"someObj",
-			"someTuple",
-			"someList",
-			"someDict",
-			"someSet",
-			"someFrozenSet",
-			"someNamedTuple",
-			"someOrderedDict",
-			"someDefaultDict",
-			"someDequeue",
-			"someLoremIpsum:shorten",
-			"someListToShorten:shorten",
-			"someDictToShorten:shorten",
-		]
-	#
-
-#
-
-class Test_dump(TestBase,jk_prettyprintobj.DumpMixin):
-
-	def _dump(self, ctx:jk_prettyprintobj.DumpCtx):
-		ctx.dumpVar("someStr", self.someStr)
-		ctx.dumpVar("someInt", self.someInt)
-		ctx.dumpVar("someBool", self.someBool)
-		ctx.dumpVar("someNone", self.someNone)
-		ctx.dumpVar("someFloat", self.someFloat)
-		ctx.dumpVar("someDate", self.someDate)
-		ctx.dumpVar("someObj", self.someObj)
-		ctx.dumpVar("someTuple", self.someTuple)
-		ctx.dumpVar("someList", self.someList)
-		ctx.dumpVar("someDict", self.someDict)
-		ctx.dumpVar("someSet", self.someSet)
-		ctx.dumpVar("someFrozenSet", self.someFrozenSet)
-		ctx.dumpVar("someNamedTuple", self.someNamedTuple)
-		ctx.dumpVar("someOrderedDict", self.someOrderedDict)
-		ctx.dumpVar("someDefaultDict", self.someDefaultDict)
-		ctx.dumpVar("someDequeue", self.someDequeue)
-		ctx.dumpVar("someLoremIpsum", self.someLoremIpsum, "shorten")
-		ctx.dumpVar("someListToShorten", self.someListToShorten, "shorten")
-		ctx.dumpVar("someDictToShorten", self.someDictToShorten, "shorten")
-	#
-
-#
-
-
-
-
-t = Test_dumpVarNames()
-t.dump()
-
-t = Test_dump()
-t.dump()
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
