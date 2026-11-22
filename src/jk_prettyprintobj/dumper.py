@@ -86,7 +86,7 @@ class DumpCtx(object):
 	#
 	# if you implement `void _dump(DumpCtx ctx)` invoke this method to dump a specific variable explicitely.
 	#
-	def dumpVar(self, varName:str, value, processorName:typing.Union[str,None] = None) -> None:
+	def dumpVar(self, varName:str, value, processorName:str|None = None) -> None:
 		self._dumpX(varName + " = ", value, processorName)
 	#
 
@@ -122,9 +122,11 @@ class DumpCtx(object):
 			processorName = None
 			pos = varName.find(":")
 			if pos == 0:
-				raise Exception()
+				raise Exception(f"No variable name: {varName!r}")
 			elif pos > 0:
 				processorName = varName[pos+1:]
+				if len(processorName) == 0:
+					raise Exception(f"Empty post processor specified: {varName!r}")
 				varName = varName[:pos]
 
 			value = getattr(caller, varName)
@@ -143,7 +145,7 @@ class DumpCtx(object):
 	# @param		any value				(optional) The value to print
 	# @param		str? processorName		(optional) A value output processor
 	#
-	def _dumpX(self, extraPrefix:str, value, processorName:typing.Union[str,None] = None):
+	def _dumpX(self, extraPrefix:str, value, processorName:str|None = None):
 		if value is None:
 			self._dumpPrimitive(extraPrefix, None, processorName)
 			return
@@ -199,6 +201,12 @@ class DumpCtx(object):
 	#									Supports: "shorten"
 	#
 	def _dumpObj(self, extraPrefix:str, value:object, processorName:typing.Union[str,None] = None):
+		if processorName == "...":
+			self.outputLines.append(self.prefix + extraPrefix + "...")
+			return
+
+		# ----
+
 		if processorName == "shorten":
 			if hasattr(value, "_dumpShort"):
 				ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
@@ -207,23 +215,25 @@ class DumpCtx(object):
 				self.outputLines.append(self.prefix + extraPrefix + value.__class__.__name__ + "<( " + value._toStrShort() + " )>")
 			else:
 				self.outputLines.append(self.prefix + extraPrefix + value.__class__.__name__ + "<(...)>")
+			return
 
+		# ----
+
+		if hasattr(value, "_toStrShort"):
+			self.outputLines.append(self.prefix + extraPrefix + value.__class__.__name__ + "<( " + value._toStrShort() + " )>")
 		else:
-			if hasattr(value, "_toStrShort"):
-				self.outputLines.append(self.prefix + extraPrefix + value.__class__.__name__ + "<( " + value._toStrShort() + " )>")
-			else:
-				self.outputLines.append(self.prefix + extraPrefix + value.__class__.__name__ + "<(")
+			self.outputLines.append(self.prefix + extraPrefix + value.__class__.__name__ + "<(")
 
-				ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
-				with ctx as ctx2:
-					if hasattr(value, "_dump"):
-						value._dump(ctx2)
-					elif hasattr(value, "_dumpVarNames"):
-						ctx2.dumpVars(value)
-					else:
-						raise Exception("Improper object encountered for prettyprinting: " + type(value).__name__)
+			ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
+			with ctx as ctx2:
+				if hasattr(value, "_dump"):
+					value._dump(ctx2)
+				elif hasattr(value, "_dumpVarNames"):
+					ctx2.dumpVars(value)
+				else:
+					raise Exception("Improper object encountered for prettyprinting: " + type(value).__name__)
 
-				self.outputLines.append(self.prefix + ")>")
+			self.outputLines.append(self.prefix + ")>")
 	#
 
 	#
@@ -247,6 +257,12 @@ class DumpCtx(object):
 	#											to every value. Additionally if "shorten" is specified the dictionary itself will be shortened.
 	#
 	def _dumpDict(self, extraPrefix:str, value:dict, processorName:typing.Union[str,None] = None):
+		if processorName == "...":
+			self.outputLines.append(self.prefix + extraPrefix + "...")
+			return
+
+		# ----
+
 		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
 		self.outputLines.append(self.prefix + extraPrefix + e + "{")
@@ -268,6 +284,12 @@ class DumpCtx(object):
 	#											to every value. Additionally if "shorten" is specified the dictionary itself will be shortened.
 	#
 	def _dumpOrderedDict(self, extraPrefix:str, value:dict, processorName:typing.Union[str,None] = None):
+		if processorName == "...":
+			self.outputLines.append(self.prefix + extraPrefix + "...")
+			return
+
+		# ----
+
 		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
 		self.outputLines.append(self.prefix + extraPrefix + e + "{")
@@ -289,6 +311,12 @@ class DumpCtx(object):
 	#											to every value. Additionally if "shorten" is specified the list itself will be shortened.
 	#
 	def _dumpList(self, extraPrefix:str, value:list, processorName:typing.Union[str,None] = None):
+		if processorName == "...":
+			self.outputLines.append(self.prefix + extraPrefix + "...")
+			return
+
+		# ----
+
 		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
 		if self._canCompactSequence(value):
@@ -320,6 +348,12 @@ class DumpCtx(object):
 	#											to every value. Additionally if "shorten" is specified the list itself will be shortened.
 	#
 	def _dumpNamedTuple(self, extraPrefix:str, value:set, processorName:typing.Union[str,None] = None):
+		if processorName == "...":
+			self.outputLines.append(self.prefix + extraPrefix + "...")
+			return
+
+		# ----
+
 		self.outputLines.append(self.prefix + extraPrefix + value.__class__.__name__ + "(")
 
 		ctx = DumpCtx(self.__s, self.outputLines, None, self.prefix + "\t")
@@ -339,6 +373,12 @@ class DumpCtx(object):
 	#											to every value. Additionally if "shorten" is specified the list itself will be shortened.
 	#
 	def _dumpTuple(self, extraPrefix:str, value:set, processorName:typing.Union[str,None] = None):
+		if processorName == "...":
+			self.outputLines.append(self.prefix + extraPrefix + "...")
+			return
+
+		# ----
+
 		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
 		if self._canCompactSequence(value):
@@ -367,6 +407,12 @@ class DumpCtx(object):
 	# Dump the specified byte array.
 	#
 	def _dumpBytes(self, extraPrefix:str, value:bytes, processorName:typing.Union[str,None] = None):
+		if processorName == "...":
+			self.outputLines.append(self.prefix + extraPrefix + "...")
+			return
+
+		# ----
+
 		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
 		if len(value) <= self.__s.bytesLineSize:
@@ -390,6 +436,12 @@ class DumpCtx(object):
 	# Dump the specified set.
 	#
 	def _dumpSet(self, extraPrefix:str, value:set, processorName:typing.Union[str,None] = None):
+		if processorName == "...":
+			self.outputLines.append(self.prefix + extraPrefix + "...")
+			return
+
+		# ----
+
 		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
 		sequence = sorted(value)
@@ -413,6 +465,12 @@ class DumpCtx(object):
 	# Dump the specified frozen set.
 	#
 	def _dumpFrozenSet(self, extraPrefix:str, value:frozenset, processorName:typing.Union[str,None] = None):
+		if processorName == "...":
+			self.outputLines.append(self.prefix + extraPrefix + "...")
+			return
+
+		# ----
+
 		e = (type(value).__name__ + ":") if self.__s.showComplexStructsWithType else ""
 
 		sequence = sorted(value)

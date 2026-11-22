@@ -64,3 +64,7 @@
 * 2026-06-14:
 	* Added: Support for named tuples
 
+* 2026-08-26:
+	* Removed: Metaclass NamedTupleDumpMixinMeta removed
+	* Added: Decorator dumpable_namedtuple added
+
